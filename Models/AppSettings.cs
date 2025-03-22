@@ -9,10 +9,10 @@ namespace FileSort.Models
 {
     internal class AppSettings
     {
-        public string SourceFolder { get; set; }
-        public string DestinationFolder { get; set; }
-        public List<string> ExcludedExtensions { get; set; }
-        public Dictionary<string, string> ExtensionCategories { get; set; }
+        public required string SourceFolder { get; set; }
+        public  required string DestinationFolder { get; set; }
+        public required List<string> ExcludedExtensions { get; set; }
+        public required Dictionary<string, string> ExtensionCategories { get; set; }
         public HashSet<string> Categories => new HashSet<string>(
             ExtensionCategories!.Values.Select(subCategory => $"{subCategory}")
             .Concat(new[] { "Other" })
@@ -24,14 +24,15 @@ namespace FileSort.Models
             appSettingsStr += $"{nameof(DestinationFolder)}: {DestinationFolder}\n";
             
             appSettingsStr += nameof(ExcludedExtensions) + "\n";
-            foreach (var subCategory in ExcludedExtensions) { appSettingsStr += $"\t = {subCategory.ToString()}\n"; }
+            foreach (var subCategory in ExcludedExtensions) { appSettingsStr += $"\t = {subCategory}\n"; }
 
             appSettingsStr += nameof(ExcludedExtensions) + "\n";
             foreach (var key in ExtensionCategories.Keys) { appSettingsStr += $"\t = {key, -5} - {ExtensionCategories[key]}\n"; }
 
+            appSettingsStr += nameof(Categories) + "\n";
+            foreach (var category in Categories) { appSettingsStr += $"\t = {category}\n"; }
+
             return appSettingsStr;
         }
-
-       
     }
 }

@@ -18,7 +18,7 @@ namespace FileSort.Models
 
             IConfiguration config = builder.Build();
 
-            AppSettings = config.GetSection("AppSettings").Get<AppSettings>() ?? throw new ArgumentNullException($"{nameof(AppSettings)} cannot be null in program initialization");
+            AppSettings = config.GetSection("AppSettings").Get<AppSettings>() ?? throw new ArgumentNullException(nameof(AppSettings), $"{nameof(AppSettings)} cannot be null in {nameof(Startup)} initialization");
             ApplicationDBContext = new ApplicationDBContext();
         }
 

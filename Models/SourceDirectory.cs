@@ -16,18 +16,18 @@ namespace FileSort.Models
             : base(appSettings.SourceFolder)
         {
             SpecialPrinting.PrintColored(
-                $"Set source directory to: {appSettings.SourceFolder}...",
+                $"Source directory - {appSettings.SourceFolder}...",
                 ConsoleColor.Yellow,
                 appSettings.SourceFolder
                 );
 
-            AppSettings = appSettings;
+            AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings), $"{nameof(appSettings)} cannot be null in {nameof(SourceDirectory)} initialization");
 
             //get the source files to sort
-            SourceFiles = SetSourceFiles();
+            SourceFiles = GetSourceFiles();
         }
 
-        private List<string> SetSourceFiles()
+        private List<string> GetSourceFiles()
         {
             SpecialPrinting.PrintColored(
                 "Retrieving source files... ",

@@ -45,6 +45,9 @@ namespace FileSort.Data
 
                 f.Property(file => file.SortDate)
                     .HasDefaultValueSql("GETDATE()");
+
+                f.Property(file => file.IsSorted)
+                    .HasDefaultValue(true);
             });
         }
     }
