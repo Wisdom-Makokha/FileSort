@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace FileSort.DataModels
 {
-    internal interface IFileDataModelRepository : IBaseRepository<FileDataModel>
+    internal class FailedMoves
     {
-
     }
 }

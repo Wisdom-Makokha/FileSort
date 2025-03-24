@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FileSort.DataModels
+namespace FileSort.Interfaces
 {
     internal interface IBaseRepository<T> where T : class
     {

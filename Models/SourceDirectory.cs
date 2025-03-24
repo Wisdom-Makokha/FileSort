@@ -10,19 +10,18 @@ namespace FileSort.Models
     internal class SourceDirectory : BaseDirectory
     {
         public List<string> SourceFiles { get; set; }
-        AppSettings AppSettings { get; set; }
+        private List<string> ExcludedExtensions { get; set; }
 
-        public SourceDirectory(AppSettings appSettings)
-            : base(appSettings.SourceFolder)
+        public SourceDirectory(List<string> excludedExtensions, string sourceFolder)
+            : base(sourceFolder)
         {
             SpecialPrinting.PrintColored(
-                $"Source directory - {appSettings.SourceFolder}...",
+                $"Source directory - {sourceFolder}...",
                 ConsoleColor.Yellow,
-                appSettings.SourceFolder
+                sourceFolder
                 );
 
-            AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings), $"{nameof(appSettings)} cannot be null in {nameof(SourceDirectory)} initialization");
-
+            ExcludedExtensions = excludedExtensions;
             //get the source files to sort
             SourceFiles = GetSourceFiles();
         }
@@ -43,7 +42,7 @@ namespace FileSort.Models
                 
                 var extension = Path.GetExtension(file);
 
-                if (!AppSettings.ExcludedExtensions.Contains(extension))
+                if (!ExcludedExtensions.Contains(extension))
                     sourceFiles.Add(file);
             }
 

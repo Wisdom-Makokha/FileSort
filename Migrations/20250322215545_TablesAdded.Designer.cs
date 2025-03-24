@@ -4,6 +4,7 @@ using FileSort.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FileSort.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250322215545_TablesAdded")]
+    partial class TablesAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,28 +24,6 @@ namespace FileSort.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("FileSort.DataModels.ApplicationInstance", b =>
-                {
-                    b.Property<Guid>("ApplicationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ClosingTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("InitiationTime")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.HasKey("ApplicationId");
-
-                    b.HasIndex("InitiationTime")
-                        .IsUnique();
-
-                    b.ToTable("ApplicationInstances");
-                });
 
             modelBuilder.Entity("FileSort.DataModels.Category", b =>
                 {
@@ -57,8 +38,7 @@ namespace FileSort.Migrations
 
                     b.Property<string>("CategoryName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -81,8 +61,7 @@ namespace FileSort.Migrations
 
                     b.Property<string>("ExtensionName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -99,14 +78,11 @@ namespace FileSort.Migrations
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("ExtensionId")
-                        .HasColumnType("int");
+                    b.Property<string>("Extension")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("SourceFolderPath")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("ApplicationInstanceId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
@@ -125,13 +101,9 @@ namespace FileSort.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.HasKey("FileName", "ExtensionId", "SourceFolderPath");
-
-                    b.HasIndex("ApplicationInstanceId");
+                    b.HasKey("FileName", "Extension", "SourceFolderPath");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("ExtensionId");
 
                     b.ToTable("Files");
                 });
@@ -141,7 +113,7 @@ namespace FileSort.Migrations
                     b.HasOne("FileSort.DataModels.Category", "Category")
                         .WithMany("Extensions")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -149,46 +121,18 @@ namespace FileSort.Migrations
 
             modelBuilder.Entity("FileSort.DataModels.FileDataModel", b =>
                 {
-                    b.HasOne("FileSort.DataModels.ApplicationInstance", "ApplicationInstance")
-                        .WithMany("Files")
-                        .HasForeignKey("ApplicationInstanceId")
+                    b.HasOne("FileSort.DataModels.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FileSort.DataModels.Category", "Category")
-                        .WithMany("Files")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FileSort.DataModels.Extension", "FileExtension")
-                        .WithMany("Files")
-                        .HasForeignKey("ExtensionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationInstance");
-
                     b.Navigation("Category");
-
-                    b.Navigation("FileExtension");
-                });
-
-            modelBuilder.Entity("FileSort.DataModels.ApplicationInstance", b =>
-                {
-                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("FileSort.DataModels.Category", b =>
                 {
                     b.Navigation("Extensions");
-
-                    b.Navigation("Files");
-                });
-
-            modelBuilder.Entity("FileSort.DataModels.Extension", b =>
-                {
-                    b.Navigation("Files");
                 });
 #pragma warning restore 612, 618
         }

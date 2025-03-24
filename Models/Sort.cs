@@ -1,5 +1,6 @@
 ﻿using FileSort.DataModels;
 using FileSort.Display;
+using FileSort.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,19 +11,18 @@ namespace FileSort.Models
 {
     internal class Sort
     {
-        private readonly FileDataModelRepository _repository;
-
-        public Sort(SourceDirectory sourceDirectory, DestinationDirectory destinationDirectory, AppSettings appSettings, FileDataModelRepository fileDataModelRepository)
+        public Sort(SourceDirectory sourceDirectory, DestinationDirectory destinationDirectory, Startup startup, ApplicationInstance instance)
         {
             SourceDirectory = sourceDirectory ?? throw new ArgumentNullException(nameof(sourceDirectory), $"{nameof(sourceDirectory)} cannot be null in {nameof(Sort)} initialization");
             DestinationDirectory = destinationDirectory ?? throw new ArgumentNullException(nameof(destinationDirectory), $"{nameof(destinationDirectory)} cannot be null in {nameof(Sort)} initialization");
-            AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings), $"{nameof(appSettings)} cannot be null in {nameof(Sort)} initialization");
-            _repository = fileDataModelRepository ?? throw new ArgumentNullException(nameof(_repository), $"{nameof(_repository)} cannot be null in {nameof(Sort)} initialization");
+            Startup = startup ?? throw new ArgumentNullException(nameof(startup), $"{nameof(startup)} cannot be null in {nameof(Sort)} initialization");
+            Instance = instance ?? throw new ArgumentNullException(nameof(instance), $"{nameof(instance)} cannot be null in {nameof(Sort)} initialization");
         }
 
-        public SourceDirectory SourceDirectory { get; set; }
-        public DestinationDirectory DestinationDirectory { get; set; }
-        public AppSettings AppSettings { get; set; }
+        private SourceDirectory SourceDirectory { get; set; }
+        private DestinationDirectory DestinationDirectory { get; set; }
+        private Startup Startup { get; set; }
+        private ApplicationInstance Instance { get; set; }
 
         // this dictionary keeps track of the location of a file
         // true if at destination and sorted
@@ -30,24 +30,23 @@ namespace FileSort.Models
         private Dictionary<string, string> MovedFiles = new Dictionary<string, string>();
 
         private bool SortedFlag = false;
-        private bool ReversedFlag = false;
 
         // method dedicated to moving a file
         private void MoveFile(string file, string destination)
         {
             try
             {
-                //File.Move(file, destination);
+                File.Move(file, destination);
 
                 SpecialPrinting.PrintColored(
-                    $"Moved\n - {file} to {destination}",
+                    $"\tMoved\n\t - {file} to {destination}",
                     ConsoleColor.Green,
                     file, destination);
             }
             catch (Exception ex)
             {
                 SpecialPrinting.PrintColored(
-                    $"Error moving file: {file}\nto {destination}",
+                    $"\tError moving file: {file}\n\tto {destination}",
                     ConsoleColor.Red,
                     file, destination);
                 SpecialPrinting.PrintColored(ex.Message, ConsoleColor.Red);
@@ -62,28 +61,42 @@ namespace FileSort.Models
                 ConsoleColor.Yellow);
 
             string subDirectory;
-            string destination;
 
             if (SourceDirectory.SourceFiles.Count > 0)
             {
                 foreach (var file in SourceDirectory.SourceFiles)
                 {
                     FileInfo fileInfo = new FileInfo(file);
+                    
                     var extension = fileInfo.Extension;
 
-                    if (AppSettings.ExcludedExtensions.Contains(extension))
+                    if (Startup.ExcludedExtensions.Contains(extension))
                     {
                         SpecialPrinting.PrintColored($"Skipped file: {fileInfo.Name} with excluded extension: {extension}\nFile not moved", ConsoleColor.Yellow, fileInfo.Name, extension);
 
                         continue;
                     }
-                    else if (AppSettings.ExtensionCategories!.TryGetValue(extension, out string? value)) { subDirectory = value; }
+                    else if (Startup.ExtensionCategories!.TryGetValue(extension, out string? value)) { subDirectory = value; }
                     else
                     {
-                        subDirectory = "Other";
+                        subDirectory = "other";
                     }
 
-                    destination = Path.Combine(Path.Combine(DestinationDirectory.DirectoryPath, subDirectory), Path.GetFileName(file));
+                    FileDataModel fileDataModel = new FileDataModel()
+                    {
+                        FileName = Path.GetFileNameWithoutExtension(fileInfo.FullName),
+                        ExtensionId = Startup.Extensions.Single(e => e.ExtensionName == extension).Id,
+                        CategoryId = Startup.Categories.Single(c => c.CategoryName == subDirectory).Id,
+                        SourceFolderPath = SourceDirectory.DirectoryPath,
+                        DestinationFolderPath = DestinationDirectory.DirectoryPath,
+                        ApplicationInstanceId = Instance.ApplicationId,
+                        IsSorted = true,
+                    };
+
+                    Startup.FileDataModelRepository.AddEntity(fileDataModel);
+                    Startup.FileDataModelRepository.SaveChanges();
+
+                    string destination = Path.Combine(Path.Combine(DestinationDirectory.DirectoryPath, subDirectory), Path.GetFileName(file));
                     MoveFile(file, destination);
                     MovedFiles.Add(fileInfo.FullName, destination);
                 }
@@ -94,7 +107,7 @@ namespace FileSort.Models
             {
                 SpecialPrinting.PrintColored(
                     "No files to sort",
-                    ConsoleColor.Green);
+                    ConsoleColor.DarkYellow);
             }
 
             Console.WriteLine("\n");
@@ -103,14 +116,35 @@ namespace FileSort.Models
         // reverse the move for the files
         public void ReverseSort()
         {
-            SpecialPrinting.PrintColored(
-                "Reversing files sort... ",
-                ConsoleColor.Yellow);
-
-            foreach (var destination in MovedFiles.Keys)
+            if (SortedFlag)
             {
-                MoveFile(MovedFiles[destination], destination);
-                MovedFiles.Remove(destination);
+                SortedFlag = false;
+
+                SpecialPrinting.PrintColored(
+                    "Reversing files sort... ",
+                    ConsoleColor.Yellow);
+
+                foreach (var destination in MovedFiles.Keys)
+                {
+                    FileInfo fileInfo = new FileInfo(destination);
+                    FileDataModel fileDataModel = Startup.FileDataModelRepository
+                        .GetByFileNameAndExtension(Path.GetFileNameWithoutExtension(destination), fileInfo.Extension)!;
+
+                    fileDataModel.IsSorted = false;
+                    Startup.FileDataModelRepository.UpdateEntity(fileDataModel);
+                    Startup.FileDataModelRepository .SaveChanges();
+
+                    MoveFile(MovedFiles[destination], destination);
+                    MovedFiles.Remove(destination);
+                }
+
+                Console.WriteLine("\n");
+            }
+            else
+            {
+                SpecialPrinting.PrintColored(
+                    "Files not sorted yet!",
+                    ConsoleColor.DarkYellow);
             }
         }
     }

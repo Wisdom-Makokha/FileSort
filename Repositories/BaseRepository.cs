@@ -1,4 +1,5 @@
 ﻿using FileSort.Data;
+using FileSort.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FileSort.DataModels
+namespace FileSort.Repositories
 {
     internal class BaseRepository<T> : IBaseRepository<T> where T : class
     {

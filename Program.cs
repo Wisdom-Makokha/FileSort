@@ -1,6 +1,7 @@
 ﻿using FileSort.Data;
 using FileSort.DataModels;
 using FileSort.Models;
+using FileSort.Repositories;
 
 namespace FileSort
 {
@@ -9,18 +10,28 @@ namespace FileSort
         static void Main()
         {
             var startup = new Startup();
+            DateTime dateTime = DateTime.Now;
+            ApplicationInstance applicationInstance = new ApplicationInstance()
+            {
+                InitiationTime = dateTime,
+            };
 
-            //Console.WriteLine(startup.AppSettings.ToString());
-            var sourceDirectory = new SourceDirectory(startup.AppSettings);
-            var destinationDirectory = new DestinationDirectory(startup.AppSettings);
-            var repository = new FileDataModelRepository(startup.ApplicationDBContext);
+            startup.ApplicationInstanceRepository.AddEntity(applicationInstance);
+            startup.ApplicationInstanceRepository.SaveChanges();
 
-            var sort = new Sort(sourceDirectory, destinationDirectory, startup.AppSettings, repository);
+            applicationInstance = startup.ApplicationInstanceRepository.GetInstanceByTime(dateTime)!;
+
+            SourceDirectory sourceDirectory = new SourceDirectory(startup.ExcludedExtensions, startup.AppSettings.SourceFolder);
+            DestinationDirectory destinationDirectory = new DestinationDirectory(startup.CategoryNames, startup.AppSettings.DestinationFolder);
+            Sort sort = new Sort(sourceDirectory, destinationDirectory, startup, applicationInstance);
+
             sort.SortFiles();
-            sort.ReverseSort();
 
             Console.WriteLine("Press Enter to exit");
             Console.ReadLine();
+
+            startup.ApplicationInstanceRepository.SetClosingTime(applicationInstance);
+            startup.ApplicationInstanceRepository.SaveChanges();
         }
     }
 }

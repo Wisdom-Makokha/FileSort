@@ -4,6 +4,7 @@ using FileSort.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FileSort.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250323170306_FilesRelationships")]
+    partial class FilesRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,28 +24,6 @@ namespace FileSort.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("FileSort.DataModels.ApplicationInstance", b =>
-                {
-                    b.Property<Guid>("ApplicationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ClosingTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("InitiationTime")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.HasKey("ApplicationId");
-
-                    b.HasIndex("InitiationTime")
-                        .IsUnique();
-
-                    b.ToTable("ApplicationInstances");
-                });
 
             modelBuilder.Entity("FileSort.DataModels.Category", b =>
                 {
@@ -105,9 +86,6 @@ namespace FileSort.Migrations
                     b.Property<string>("SourceFolderPath")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid>("ApplicationInstanceId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -126,8 +104,6 @@ namespace FileSort.Migrations
                         .HasDefaultValueSql("GETDATE()");
 
                     b.HasKey("FileName", "ExtensionId", "SourceFolderPath");
-
-                    b.HasIndex("ApplicationInstanceId");
 
                     b.HasIndex("CategoryId");
 
@@ -149,12 +125,6 @@ namespace FileSort.Migrations
 
             modelBuilder.Entity("FileSort.DataModels.FileDataModel", b =>
                 {
-                    b.HasOne("FileSort.DataModels.ApplicationInstance", "ApplicationInstance")
-                        .WithMany("Files")
-                        .HasForeignKey("ApplicationInstanceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("FileSort.DataModels.Category", "Category")
                         .WithMany("Files")
                         .HasForeignKey("CategoryId")
@@ -167,16 +137,9 @@ namespace FileSort.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ApplicationInstance");
-
                     b.Navigation("Category");
 
                     b.Navigation("FileExtension");
-                });
-
-            modelBuilder.Entity("FileSort.DataModels.ApplicationInstance", b =>
-                {
-                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("FileSort.DataModels.Category", b =>

@@ -9,17 +9,17 @@ namespace FileSort.Models
 {
     internal class DestinationDirectory : BaseDirectory
     {
-        public AppSettings AppSettings { get; set; }
+        private List<string> Categories { get; set; }
 
-        public DestinationDirectory(AppSettings appSettings)
-            : base(appSettings.DestinationFolder)
+        public DestinationDirectory(List<string> categories, string destinationFolder)
+            : base(destinationFolder)
         {
             SpecialPrinting.PrintColored(
-                $"Destination directory - {appSettings.DestinationFolder}",
+                $"Destination directory - {destinationFolder}",
                 ConsoleColor.Yellow,
-                appSettings.DestinationFolder);
+                destinationFolder);
 
-            AppSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings), $"{nameof(appSettings)} cannot be null in {nameof(DestinationDirectory)} initialization");
+            Categories = categories;
             CheckDestinationSubDirectories();
         }
 
@@ -29,7 +29,7 @@ namespace FileSort.Models
                 "Checking destination directory subdirectories... ",
                 ConsoleColor.Yellow);
 
-            foreach (var category in AppSettings.Categories)
+            foreach (var category in Categories)
             {
                 string destination = Path.Combine(DirectoryPath, category);
 
