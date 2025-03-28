@@ -1,4 +1,5 @@
 ﻿using FileSort.Display;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,8 @@ namespace FileSort.Models
         public SourceDirectory(List<string> excludedExtensions, string sourceFolder)
             : base(sourceFolder)
         {
-            SpecialPrinting.PrintColored(
-                $"Source directory - {sourceFolder}...",
-                ConsoleColor.Yellow,
-                sourceFolder
-                );
+            AnsiConsole.MarkupLine($"[yellow]Source directory - [/][cyan]{sourceFolder}[/]");
+            //SpecialPrinting.PrintColored($"Source directory - {sourceFolder}...", ConsoleColor.Yellow, sourceFolder);
 
             ExcludedExtensions = excludedExtensions;
             //get the source files to sort
@@ -28,9 +26,8 @@ namespace FileSort.Models
 
         private List<string> GetSourceFiles()
         {
-            SpecialPrinting.PrintColored(
-                "Retrieving source files... ",
-                ConsoleColor.Yellow);
+            AnsiConsole.MarkupLine("[yellow]Retrieving source files... [/]");
+            //SpecialPrinting.PrintColored("Retrieving source files... ", ConsoleColor.Yellow);
 
             List<string> sourceFiles = new List<string>();
             IEnumerable<string> files = Directory.EnumerateFiles(DirectoryPath);
@@ -39,17 +36,15 @@ namespace FileSort.Models
             {
                 //FileInfo fileInfo = new FileInfo(file);
                 //SpecialPrinting.PrintColored(fileInfo.FullName, ConsoleColor.Yellow);
-                
+
                 var extension = Path.GetExtension(file);
 
                 if (!ExcludedExtensions.Contains(extension))
                     sourceFiles.Add(file);
             }
 
-            SpecialPrinting.PrintColored(
-                $"Retrieved {sourceFiles.Count} source files",
-                ConsoleColor.Green,
-                sourceFiles.Count);
+            AnsiConsole.MarkupLine($"[green]Retrieved [/][cyan]{sourceFiles.Count}[/][green] source files [/]");
+            //SpecialPrinting.PrintColored($"Retrieved {sourceFiles.Count} source files", ConsoleColor.Green, sourceFiles.Count);
 
             return sourceFiles;
         }

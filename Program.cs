@@ -1,7 +1,9 @@
 ﻿using FileSort.Data;
 using FileSort.DataModels;
+using FileSort.Display;
 using FileSort.Models;
 using FileSort.Repositories;
+using Spectre.Console;
 
 namespace FileSort
 {
@@ -9,29 +11,39 @@ namespace FileSort
     {
         static void Main()
         {
-            var startup = new Startup();
-            DateTime dateTime = DateTime.Now;
-            ApplicationInstance applicationInstance = new ApplicationInstance()
+            try
             {
-                InitiationTime = dateTime,
-            };
+                var startup = new Startup();
 
-            startup.ApplicationInstanceRepository.AddEntity(applicationInstance);
-            startup.ApplicationInstanceRepository.SaveChanges();
+                //Console.WriteLine(startup.AppSettings.ToString());
+                SourceDirectory sourceDirectory = new SourceDirectory(startup.ExcludedExtensions, startup.AppSettings.SourceFolder);
 
-            applicationInstance = startup.ApplicationInstanceRepository.GetInstanceByTime(dateTime)!;
+                //BaseInterface mainInterface = new BaseInterface(startup);
 
-            SourceDirectory sourceDirectory = new SourceDirectory(startup.ExcludedExtensions, startup.AppSettings.SourceFolder);
-            DestinationDirectory destinationDirectory = new DestinationDirectory(startup.CategoryNames, startup.AppSettings.DestinationFolder);
-            Sort sort = new Sort(sourceDirectory, destinationDirectory, startup, applicationInstance);
+                //mainInterface.HomeInterface();
 
-            sort.SortFiles();
+                AnsiConsole.MarkupLine("[yellow]Press Enter to Exit[/]");
+                //Console.WriteLine("Press Enter to exit");
+                Console.ReadLine();
 
-            Console.WriteLine("Press Enter to exit");
-            Console.ReadLine();
+                startup.ApplicationInstanceRepository.SetClosingTime(startup.ApplicationInstance);
+                startup.ApplicationInstanceRepository.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.WriteException(ex, ExceptionFormats.ShortenMethods);
+                
+                AnsiConsole.MarkupLine($"[red]Exception caught\nLocated[/][cyan]{ex.StackTrace}[/][red]\nException Type: [/][cyan]{ex.GetType().Name}[/][red]\nMessage: [/][cyan]{ex.Message}[/]");
 
-            startup.ApplicationInstanceRepository.SetClosingTime(applicationInstance);
-            startup.ApplicationInstanceRepository.SaveChanges();
+                //SpecialPrinting.PrintColored(
+                //    $"Exception caught\nLocated{ex.StackTrace}\nException Type: {ex.GetType().Name}\nMessage: {ex.Message}",
+                //    ConsoleColor.Red,
+                //    ex.StackTrace!, ex.GetType().Name, ex.Message);
+
+
+                Console.WriteLine("Press Enter to exit");
+                Console.ReadLine();
+            }
         }
     }
 }

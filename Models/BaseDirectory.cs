@@ -12,7 +12,7 @@ namespace FileSort.Models
         public BaseDirectory(string directoryPath)
         {
             if (string.IsNullOrEmpty(directoryPath))
-                throw new ArgumentNullException(nameof(directoryPath), "No directory path provided");
+                directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
             if (Directory.Exists(directoryPath))
                 DirectoryPath = directoryPath;

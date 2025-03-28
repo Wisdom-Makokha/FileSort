@@ -16,6 +16,7 @@ namespace FileSort.Data
         public DbSet<Extension> Extensions { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<ApplicationInstance> ApplicationInstances { get; set; }
+        public DbSet<FailedMoves> FailedMoves { get; set; }
 
         public ApplicationDBContext() : base()
         {
@@ -95,6 +96,16 @@ namespace FileSort.Data
                     .WithOne(file => file.ApplicationInstance)
                     .HasForeignKey(file => file.ApplicationInstanceId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<FailedMoves>(f =>
+            {
+                f.HasKey(failed =>  failed.Id);
+
+                f.Property(failed => failed.FailedDate)
+                    .HasDefaultValueSql("GETDATE()");
+
+
             });
         }
     }

@@ -1,8 +1,10 @@
 ﻿using FileSort.Data;
 using FileSort.DataModels;
 using FileSort.Display;
+using FileSort.Migrations;
 using FileSort.Repositories;
 using Microsoft.Extensions.Configuration;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,21 +17,28 @@ namespace FileSort.Models
     {
         public Startup()
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-            IConfiguration config = builder.Build();
+            var config = SettingsConfigurationHelper.BuildConfiguration();
 
             AppSettings = config.GetSection("AppSettings").Get<AppSettings>()
                 ?? throw new ArgumentNullException(nameof(AppSettings), $"{nameof(AppSettings)} cannot be null in {nameof(Startup)} initialization");
             ApplicationDBContext = new ApplicationDBContext();
 
+            DateTime dateTime = DateTime.Now;
+            ApplicationInstance = new ApplicationInstance()
+            {
+                InitiationTime = dateTime,
+            };
+
             ApplicationInstanceRepository = new ApplicationInstanceRepository(ApplicationDBContext);
             FileDataModelRepository = new FileDataModelRepository(ApplicationDBContext);
             ExtensionRepository = new ExtensionRepository(ApplicationDBContext);
             CategoryRepository = new CategoryRepository(ApplicationDBContext);
+            FailedMovesRepository = new FailedMovesRepository(ApplicationDBContext);
 
+            ApplicationInstanceRepository.AddEntity(ApplicationInstance);
+            ApplicationInstanceRepository.SaveChanges();
+
+            ApplicationInstance = ApplicationInstanceRepository.GetInstanceByTime(dateTime)!;
             DbInitializer.SeedDatabase(applicationDBContext: ApplicationDBContext);
 
             Categories = (List<Category>)CategoryRepository.GetAll();
@@ -40,12 +49,14 @@ namespace FileSort.Models
         }
 
         // properties
+        public ApplicationInstance ApplicationInstance { get; set; }
         public AppSettings AppSettings { get; set; }
         public ApplicationDBContext ApplicationDBContext { get; set; }
         public ApplicationInstanceRepository ApplicationInstanceRepository { get; set; }
         public FileDataModelRepository FileDataModelRepository { get; set; }
         public ExtensionRepository ExtensionRepository { get; set; }
         public CategoryRepository CategoryRepository { get; set; }
+        public FailedMovesRepository FailedMovesRepository { get; set; }
         public List<Category> Categories { get; set; } = new List<Category>();
         public List<string> CategoryNames { get; set; } = new List<string>();
         public List<Extension> Extensions { get; set; } = new List<Extension>();
@@ -66,6 +77,7 @@ namespace FileSort.Models
             {
                 result.Add(extension);
 
+                AnsiConsole.MarkupLine($"[magenta]Excluded Extension: [/][cyan]{extension}[/]");
                 //SpecialPrinting.PrintColored($"Excluded Extension: {extension}", ConsoleColor.Magenta, extension);
             }
 
@@ -88,13 +100,11 @@ namespace FileSort.Models
             foreach (var extension in extensionCategory)
             { result.Add(extension.newExtension, extension.newCategory); }
 
-            //foreach (var extension in result.Keys)
-            //{
-            //    SpecialPrinting.PrintColored(
-            //        $"Extension: {extension,-15} - Category: {result[extension]}",
-            //        ConsoleColor.Magenta,
-            //        extension, result[extension]);
-            //}
+            foreach (var extension in result.Keys)
+            {
+                AnsiConsole.MarkupLine($"[magenta]Extension: [/][cyan]{extension,-15}[/][magenta] - Category: [/][cyan]{result[extension]}[/]");
+                //SpecialPrinting.PrintColored($"Extension: {extension,-15} - Category: {result[extension]}", ConsoleColor.Magenta, extension, result[extension]);
+            }
 
             return result;
         }

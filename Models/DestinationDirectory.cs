@@ -1,4 +1,5 @@
 ﻿using FileSort.Display;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,8 @@ namespace FileSort.Models
         public DestinationDirectory(List<string> categories, string destinationFolder)
             : base(destinationFolder)
         {
-            SpecialPrinting.PrintColored(
-                $"Destination directory - {destinationFolder}",
-                ConsoleColor.Yellow,
-                destinationFolder);
+            AnsiConsole.MarkupLine($"[yellow]Destination directory - [/][cyan]{destinationFolder}[/]");
+            //SpecialPrinting.PrintColored($"Destination directory - {destinationFolder}", ConsoleColor.Yellow, destinationFolder);
 
             Categories = categories;
             CheckDestinationSubDirectories();
@@ -25,9 +24,8 @@ namespace FileSort.Models
 
         private void CheckDestinationSubDirectories()
         {
-            SpecialPrinting.PrintColored(
-                "Checking destination directory subdirectories... ",
-                ConsoleColor.Yellow);
+            AnsiConsole.MarkupLine("[yellow]Checking destination directory subdirectories... [/]");
+            //SpecialPrinting.PrintColored("Checking destination directory subdirectories... ", ConsoleColor.Yellow);
 
             foreach (var category in Categories)
             {
@@ -38,7 +36,8 @@ namespace FileSort.Models
                     try
                     {
                         Directory.CreateDirectory(destination);
-                        SpecialPrinting.PrintColored($"Created: {category}", ConsoleColor.Green, category);
+                        AnsiConsole.MarkupLine($"[green]Created: [/][cyan]{category}[/]");
+                        //SpecialPrinting.PrintColored($"Created: {category}", ConsoleColor.Green, category);
                     }
                     catch
                     {

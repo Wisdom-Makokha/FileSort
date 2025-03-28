@@ -18,5 +18,24 @@ namespace FileSort.Repositories
         {
             return _dbContext.Files.FirstOrDefault(file => file.FileName == fileName && file.FileExtension.ExtensionName == extension);
         }
+
+        public Dictionary<string, string> GetInstanceMovedFiles(Guid applicationInstance)
+        {
+            var movedFiles = from file in _dbContext.Files
+                             where file.ApplicationInstanceId == applicationInstance
+                             select new
+                             {
+                                 name = file.FileName,
+                                 destination = file.DestinationFolderPath
+                             };
+
+            Dictionary<string, string> result = new Dictionary<string, string>();
+            foreach (var file in movedFiles)
+            {
+                result.Add(file.name, file.destination);
+            }
+
+            return result;
+        }
     }
 }

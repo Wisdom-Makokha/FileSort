@@ -1,5 +1,6 @@
 ﻿using FileSort.DataModels;
 using FileSort.Display;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,17 +19,17 @@ namespace FileSort.Data
             using var transaction = applicationDBContext.Database.BeginTransaction();
             try
             {
-                if (!SeedCategories(applicationDBContext) || !SeedExtensions(applicationDBContext))
+                if (SeedCategories(applicationDBContext))
                 {
-                    SpecialPrinting.PrintColored("Database already seeded", ConsoleColor.DarkYellow);
+                    AnsiConsole.MarkupLine("[green]Database successfully seeded[/]");
+                    //SpecialPrinting.PrintColored("Database successfully seeded", ConsoleColor.Green);
                 }
-                else
-                {
-                    SpecialPrinting.PrintColored("Database seeded successfully", ConsoleColor.Green);
-                }
+                //else
+                //{
+                //    SpecialPrinting.PrintColored("Database already seeded", ConsoleColor.DarkYellow);
+                //}
 
                 transaction.Commit();
-
             }
             catch
             {
@@ -39,7 +40,6 @@ namespace FileSort.Data
 
         public static bool SeedCategories(ApplicationDBContext applicationDBContext)
         {
-            bool result = false;
             if (!applicationDBContext.Categories.Any())
             {
 
@@ -100,18 +100,16 @@ namespace FileSort.Data
                 applicationDBContext.Categories.AddRange(categories);
                 applicationDBContext.SaveChanges();
 
-                SpecialPrinting.PrintColored(
-                    "Categories table seeded successfully",
-                    ConsoleColor.Green);
+                AnsiConsole.MarkupLine("[green]Categories table seeded successfully[/]");
+                //SpecialPrinting.PrintColored("Categories table seeded successfully", ConsoleColor.Green);
+            }
+            //else
+            //{
+            //    AnsiConsole.MarkupLine("[darkyellow]Categories table already seeded[/]");
+            //    SpecialPrinting.PrintColored("Categories table already seeded", ConsoleColor.DarkYellow);
+            //}
 
-                result = true;
-            }
-            else
-            {
-                SpecialPrinting.PrintColored(
-                    "Categories table already seeded",
-                    ConsoleColor.DarkYellow);
-            }
+            bool result = SeedExtensions(applicationDBContext);
 
             return result;
         }
@@ -286,18 +284,16 @@ namespace FileSort.Data
                 applicationDBContext.Extensions.AddRange(extensions);
                 applicationDBContext.SaveChanges();
 
-                SpecialPrinting.PrintColored(
-                    "Extensions table seeded successfully",
-                    ConsoleColor.Green);
+                AnsiConsole.MarkupLine("[green]Extensions table seeded successfully[/]");
+                //SpecialPrinting.PrintColored("Extensions table seeded successfully", ConsoleColor.Green);
 
                 result = true;
             }
-            else
-            {
-                SpecialPrinting.PrintColored(
-                    "Extensions table already seeded",
-                    ConsoleColor.DarkYellow);
-            }
+            //else
+            //{
+            //    AnsiConsole.MarkupLine("[darkyellow]Extensions table already seeded[/]");
+            //    SpecialPrinting.PrintColored("Extensions table already seeded", ConsoleColor.DarkYellow);
+            //}
 
             return result;
         }
