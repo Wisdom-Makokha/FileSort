@@ -10,6 +10,6 @@ namespace FileSort.Interfaces
     internal interface IFileDataModelRepository : IBaseRepository<FileDataModel>
     {
         FileDataModel? GetByFileNameAndExtension(string fileName, string extension);
-        Dictionary<string, string> GetInstanceMovedFiles(Guid applicationInstance);
+        List<FileDataModel> GetInstanceMovedFiles(Guid applicationInstance);
     }
 }

@@ -25,26 +25,21 @@ namespace FileSort.FileHandling
         // reverse the move for the files
         public void ReverseSort()
         {
-            Dictionary<string, string> movedFiles = new Dictionary<string, string>();
-            movedFiles = FileRepository.GetInstanceMovedFiles(ApplicationInstance.ApplicationId);
+            var movedFiles = FileRepository.GetInstanceMovedFiles(ApplicationInstance.ApplicationId);
 
             if (movedFiles.Count > 0)
             {
                 AnsiConsole.MarkupLine("[yellow]Reversing files sort... [/]");
-                //SpecialPrinting.PrintColored("Reversing files sort... ", ConsoleColor.Yellow);
-
-                foreach (var destination in movedFiles.Keys)
+                foreach (var file in movedFiles)
                 {
-                    FileInfo fileInfo = new FileInfo(destination);
-                    FileDataModel fileDataModel = FileRepository
-                        .GetByFileNameAndExtension(Path.GetFileNameWithoutExtension(destination), fileInfo.Extension)!;
+                    string destination = Path.Combine(file.SourceFolderPath, file.FileName + file.FileExtension.ExtensionName);
+                    string source = Path.Combine(file.DestinationFolderPath, file.FileName + file.FileExtension.ExtensionName);
 
-                    fileDataModel.IsSorted = false;
-                    FileRepository.UpdateEntity(fileDataModel);
+                    file.IsSorted = false;
+                    FileRepository.UpdateEntity(file);
                     FileRepository.SaveChanges();
 
-                    MoveFile(movedFiles[destination], destination);
-                    movedFiles.Remove(destination);
+                    MoveFile(source, destination);
                 }
 
                 AnsiConsole.WriteLine("\n");

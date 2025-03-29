@@ -32,23 +32,22 @@ namespace FileSort.Display
          * check all the above details
          * exit the interface and program
          */
-        protected static string ExitMessage
+        private static string ExitMessage
         {
             get
-            { return "exit"; }
+            { return "EXIT"; }
         }
-        protected static string BackMessage
+        private static string BackMessage
         {
             get
-            { return "back"; }
+            { return "BACK"; }
         }
 
-        protected bool RunOptions(Dictionary<string, Action> options, string interfaceName)
+        private bool RunOptions(Dictionary<string, Action> options, string interfaceName)
         {
-            if (!options.ContainsKey(ExitMessage) || !options.ContainsKey(BackMessage))
+            if (!options.ContainsKey(ExitMessage) && !options.ContainsKey(BackMessage))
                 throw new ArgumentException($"Value of {nameof(ExitMessage)} or {nameof(BackMessage)} is invalid in {nameof(RunOptions)} method");
 
-            AnsiConsole.Clear();
             AnsiConsole.MarkupLine($"[underline silver]{interfaceName}[/]");
 
             string userChoice = AnsiConsole.Prompt(
@@ -56,16 +55,11 @@ namespace FileSort.Display
                     .Title("[magenta]Pick one of these options: [/]")
                     .AddChoices(options.Keys));
 
-            //AnsiConsole.MarkupLine($"[cyan]{userChoice}[/]");
             if (userChoice == ExitMessage || userChoice == BackMessage)
                 return false;
             else
             {
                 options[userChoice]();
-
-                AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue.... [/]");
-                //SpecialPrinting.PrintColored("Press <Enter> to continue.... ", ConsoleColor.Yellow);
-                Console.ReadLine();
 
                 return true;
             }
@@ -76,7 +70,7 @@ namespace FileSort.Display
             Dictionary<string, Action> InterfaceOptions = new Dictionary<string, Action>()
             {
                 {"sort", SortFiles },
-                {"reverse recent sort", ReverseSort },
+                //{"reverse recent sort", ReverseSort },
                 {"sort history", CheckSortHistory },
                 {"settings", CheckSettings },
                 {"issue", CheckIssues },
@@ -87,6 +81,7 @@ namespace FileSort.Display
 
             while (keepGoing)
             {
+                AnsiConsole.Clear();
                 keepGoing = RunOptions(InterfaceOptions, "HOME");
             }
         }
@@ -127,6 +122,7 @@ namespace FileSort.Display
 
             while (keepGoing)
             {
+                AnsiConsole.Clear();
                 keepGoing = RunOptions(InterfaceOptions, "SETTINGS");
             }
         }
@@ -135,10 +131,11 @@ namespace FileSort.Display
         {
             Dictionary<string, Action> miniFunctions = new Dictionary<string, Action>
             {
-                {"show", ShowSourceFolder },
-                {"set", SetSourceFolder },
+                {"edit source folder", EditSourceFolder },
                 {BackMessage, () => { } }
             };
+
+            AnsiConsole.MarkupLine($"[green]Source folder path - [/][cyan]{Startup.AppSettings.SourceFolder}[/]\n\n");
 
             bool KeepGoing = true;
             while (KeepGoing)
@@ -147,37 +144,43 @@ namespace FileSort.Display
             }
         }
 
-        private void ShowSourceFolder()
-        {
-            AnsiConsole.MarkupLine($"[green]Source folder - [/][cyan]{Startup.AppSettings.SourceFolder}[/]");
-        }
-
-        private void SetSourceFolder()
+        private void EditSourceFolder()
         {
             bool tryAgain = true;
 
             while (tryAgain)
             {
                 AnsiConsole.Clear();
-                ShowSourceFolder();
 
                 Console.WriteLine();
                 var newFolderPath = AnsiConsole.Prompt(
                     new TextPrompt<string>("[magenta]Enter the new source folder full path: [/]")
                         .DefaultValue(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)));
 
-                if (Directory.Exists(newFolderPath))
+                bool confirm = AnsiConsole.Prompt(
+                   new TextPrompt<bool>($"[magenta]Update source folder path from: [/][cyan]{Startup.AppSettings.SourceFolder}[/][magenta] to [/][cyan]{newFolderPath}[/]?")
+                       .AddChoice(true)
+                       .AddChoice(false)
+                       .DefaultValue(false)
+                       .WithConverter(choice => choice ? "y" : "n"));
+
+                if (confirm)
                 {
-                    SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Source);
-                    Startup.GetAppSettings();
+                    if (Directory.Exists(newFolderPath))
+                    {
+                        SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Source);
+                        Startup.GetAppSettings();
 
-                    ShowSourceFolder();
-
-                    tryAgain = false;
+                        tryAgain = false;
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
+                    }
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
+                    AnsiConsole.MarkupLine("[red]Edit canceled[/]");
                 }
             }
         }
@@ -186,10 +189,11 @@ namespace FileSort.Display
         {
             Dictionary<string, Action> miniFunctions = new Dictionary<string, Action>
             {
-                {"show", ShowDestinationFolder },
-                {"set", SetDestinationFolder },
+                {"set", EditDestinationFolder },
                 {BackMessage, () => { } }
             };
+
+            AnsiConsole.MarkupLine($"[green]Destination folder path - [/][cyan]{Startup.AppSettings.DestinationFolder}[/]\n\n");
 
             bool KeepGoing = true;
             while (KeepGoing)
@@ -198,36 +202,42 @@ namespace FileSort.Display
             }
         }
 
-        private void ShowDestinationFolder()
-        {
-            AnsiConsole.MarkupLine($"[green]Destination folder - [/][cyan]{Startup.AppSettings.DestinationFolder}[/]");
-        }
-
-        private void SetDestinationFolder()
+        private void EditDestinationFolder()
         {
             bool tryAgain = true;
 
             while (tryAgain)
             {
                 AnsiConsole.Clear();
-                ShowDestinationFolder();
 
                 Console.WriteLine();
                 var newFolderPath = AnsiConsole.Prompt(
                     new TextPrompt<string>("[magenta]Enter the new destination folder full path: [/]"));
 
-                if (Directory.Exists(newFolderPath))
+                bool confirm = AnsiConsole.Prompt(
+                   new TextPrompt<bool>($"[magenta]Update destination folder path from: [/][cyan]{Startup.AppSettings.DestinationFolder}[/][magenta] to [/][cyan]{newFolderPath}[/]?")
+                       .AddChoice(true)
+                       .AddChoice(false)
+                       .DefaultValue(false)
+                       .WithConverter(choice => choice ? "y" : "n"));
+
+                if (confirm)
                 {
-                    SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Destination);
-                    Startup.GetAppSettings();
+                    if (Directory.Exists(newFolderPath))
+                    {
+                        SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Destination);
+                        Startup.GetAppSettings();
 
-                    ShowDestinationFolder();
-
-                    tryAgain = false;
+                        tryAgain = false;
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
+                    }
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
+                    AnsiConsole.MarkupLine("[red]Edit canceled[/]");
                 }
             }
         }
@@ -238,81 +248,63 @@ namespace FileSort.Display
             {
                 {"show categories", ShowCategories },
                 {"add category", AddCategory },
-                //{"edit category", EditCategory },
-                //{"remove category", RemoveCategory},
                 {BackMessage, () => { } }
             };
 
             bool keepGoing = true;
-            while (!keepGoing)
+            while (keepGoing)
             {
+                AnsiConsole.Clear();
                 keepGoing = RunOptions(miniOptions, "CATEGORIES");
             }
         }
 
         private void ShowCategories()
         {
-            //AnsiConsole.MarkupLine("[magenta]Categories: -[/]");
-            //for (int i = 0; i < Startup.CategoryNames.Count; i++)
-            //{
-            //    AnsiConsole.MarkupLine($"[magenta]{i}{".",3}[/][green]{Startup.CategoryNames[i]}[/]");
-            //}
-
-
-        }
-
-        private void AddCategory()
-        {
             bool tryAgain = true;
+
+            List<string> categories = new List<string>();
+            foreach (var name in Startup.CategoryNames)
+            {
+                categories.Add(name);
+            }
+            categories.Add(BackMessage);
 
             while (tryAgain)
             {
                 AnsiConsole.Clear();
-                ShowCategories();
-                Console.WriteLine();
+                var pickedCategory = AnsiConsole.Prompt(
+                    new SelectionPrompt<string>()
+                    .Title("Pick a category for further options: ")
+                    .AddChoices(categories));
 
-                var newCategory = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a name for a new category: [/]"));
-                var newCategoryDescription = AnsiConsole.Prompt(new TextPrompt<string?>("[magenta]Enter a description for the new category: [/]"));
 
-                try
+                if (pickedCategory != BackMessage)
                 {
-                    Category categoryEntity = new Category()
-                    {
-                        CategoryName = newCategory,
-                        CategoryDescription = newCategoryDescription
-                    };
+                    var category = Startup.Categories.FirstOrDefault(c => c.CategoryName == pickedCategory);
 
-                    Startup.CategoryRepository.AddEntity(categoryEntity);
-                    Startup.CategoryRepository.SaveChanges();
-
-                    Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
-                    Startup.CategoryNames = Startup.GetCategoryNames();
-
-                    ShowCategories();
-
+                    ShowCategory(category!);
+                }
+                else
                     tryAgain = false;
-                }
-                catch (Exception ex)
-                {
-                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
-                }
             }
         }
 
-        public void EditCategory()
+        private void AddCategory()
         {
-            var pickedCategoryStr = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("[magenta]Pick a category to edit: - [/]")
-                    .AddChoices(Startup.CategoryNames));
+            var newCategory = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a name for a new category: [/]"));
+            var newCategoryDescription = AnsiConsole.Prompt(
+                new TextPrompt<string?>("[magenta]Enter a description for the new category: [/]")
+                .DefaultValue("No description added"));
 
-            Category category = Startup.Categories.FirstOrDefault(c => c.CategoryName == pickedCategoryStr)!;
-
-            var updateCategoryName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new category name[/]"));
-            var updateCategoryDescription = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new category description[/]"));
+            Category categoryEntity = new Category()
+            {
+                CategoryName = newCategory,
+                CategoryDescription = newCategoryDescription
+            };
 
             bool confirm = AnsiConsole.Prompt(
-               new TextPrompt<bool>($"[magenta]Update category name from: [/][cyan]{category.CategoryName}[/][magenta] to [/][cyan]{pickedCategoryStr}[/]?")
+               new TextPrompt<bool>($"[magenta]Add category with the name: [/][cyan]{newCategory}[/][magenta] and description: [/][cyan]{newCategoryDescription}[/]?")
                    .AddChoice(true)
                    .AddChoice(false)
                    .DefaultValue(false)
@@ -320,35 +312,153 @@ namespace FileSort.Display
 
             if (confirm)
             {
-                category.CategoryName = pickedCategoryStr;
+                try
+                {
+                    Startup.CategoryRepository.AddEntity(categoryEntity);
+                    Startup.CategoryRepository.SaveChanges();
 
-                Startup.CategoryRepository.UpdateEntity(category);
-                Startup.CategoryRepository.SaveChanges();
+                    Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
+                    Startup.CategoryNames = Startup.GetCategoryNames();
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]New category not added[/]");
+            }
+        }
 
-                AnsiConsole.MarkupLine($"[green]Category name successfully updated to [/][cyan]{pickedCategoryStr}[/]");
+        public void ShowCategory(Category category)
+        {
+            bool tryAgain = true;
 
-                Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
-                Startup.CategoryNames = Startup.GetCategoryNames();
+            while (tryAgain)
+            {
+                var moreOnCategory = new Dictionary<string, Func<Category, bool>>
+                {
+                    {"edit category name", EditCategoryName },
+                    {"edit category description", EditCategoryDescription },
+                    {"remove category", RemoveCategory},
+                };
+
+                AnsiConsole.Clear();
+
+                AnsiConsole.MarkupLine("[underline magenta]Category[/]");
+                AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{category.CategoryName}[/]");
+                AnsiConsole.MarkupLine($"[magenta]Description: - [/][cyan]{category.CategoryDescription}[/]");
+                AnsiConsole.MarkupLine($"[magenta]Extensions: - [/]");
+                foreach (var item in category.Extensions)
+                {
+                    AnsiConsole.MarkupLine($"\t[magenta]- [/][cyan]{item.ExtensionName}[/]");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine();
+
+                HashSet<string> moreOptions = new HashSet<string>();
+
+                foreach (var option in moreOnCategory.Keys)
+                {
+                    moreOptions.Add(option);
+                }
+                moreOptions.Add(BackMessage);
+
+                var userChoice = AnsiConsole.Prompt(
+                    new SelectionPrompt<string>()
+                    .AddChoices(moreOptions));
+
+                if (userChoice == BackMessage)
+                    tryAgain = false;
+                else
+                {
+                    moreOnCategory[userChoice](category);
+                }
+            }
+        }
+
+        private bool EditCategoryName(Category categoryEdit)
+        {
+            var updateCategoryName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new category name[/]"));
+
+            bool confirmName = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Update category name from: [/][cyan]{categoryEdit.CategoryName}[/][magenta] to [/][cyan]{updateCategoryName}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirmName)
+            {
+                try
+                {
+                    categoryEdit.CategoryName = updateCategoryName;
+
+                    Startup.CategoryRepository.UpdateEntity(categoryEdit);
+                    Startup.CategoryRepository.SaveChanges();
+
+                    AnsiConsole.MarkupLine($"[green]Category name successfully updated to [/][cyan]{categoryEdit.CategoryName}[/]");
+
+                    //Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
+                    //Startup.CategoryNames = Startup.GetCategoryNames();
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
             }
             else
             {
                 AnsiConsole.MarkupLine($"[red]Update canceled[/]");
             }
 
-            ShowCategories();
+            return true;
         }
 
-        public void RemoveCategory()
+        private bool EditCategoryDescription(Category categoryEdit)
         {
-            var pickedCategoryStr = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("[magenta]Pick a category to remove: - [/]")
-                    .AddChoices(Startup.CategoryNames));
+            var updateCategoryDescription = AnsiConsole.Prompt(new TextPrompt<string?>("[magenta]Enter a new category description[/]"));
+            bool confirmDescription = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Update category description from: [/][cyan]{categoryEdit.CategoryDescription}[/][magenta] to [/][cyan]{updateCategoryDescription}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
 
-            Category category = Startup.Categories.FirstOrDefault(c => c.CategoryName == pickedCategoryStr)!;
+            if (confirmDescription)
+            {
+                try
+                {
+                    categoryEdit.CategoryDescription = updateCategoryDescription;
 
+                    Startup.CategoryRepository.UpdateEntity(categoryEdit);
+                    Startup.CategoryRepository.SaveChanges();
+
+                    AnsiConsole.MarkupLine($"[green]Category description successfully updated to [/][cyan]{categoryEdit.CategoryDescription}[/]");
+
+                    Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
+                    Startup.CategoryNames = Startup.GetCategoryNames();
+                }
+
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine($"[red]Update canceled[/]");
+            }
+
+            return true;
+        }
+
+        private bool RemoveCategory(Category categoryDelete)
+        {
             bool confirm = AnsiConsole.Prompt(
-                new TextPrompt<bool>($"Remove category: {category.CategoryName}?")
+                new TextPrompt<bool>($"Remove category: {categoryDelete.CategoryName}?")
                     .AddChoice(true)
                     .AddChoice(false)
                     .DefaultValue(true)
@@ -356,27 +466,286 @@ namespace FileSort.Display
 
             if (confirm)
             {
-                category.CategoryName = pickedCategoryStr;
+                try
+                {
+                    Startup.CategoryRepository.DeleteEntity(categoryDelete.Id);
+                    Startup.CategoryRepository.SaveChanges();
 
-                Startup.CategoryRepository.DeleteEntity(category.Id);
-                Startup.CategoryRepository.SaveChanges();
+                    AnsiConsole.MarkupLine($"[red]Removed category [/][cyan]{categoryDelete.CategoryName}[/]");
 
-                AnsiConsole.MarkupLine($"[red]Removed category [/][cyan]{pickedCategoryStr}[/]");
+                    //Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
+                    //Startup.CategoryNames = Startup.GetCategoryNames();
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
 
-                Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
-                Startup.CategoryNames = Startup.GetCategoryNames();
+                return true;
+            }
+            else
+            {
+                AnsiConsole.MarkupLine($"[green]Delete canceled[/]");
+                return false;
+            }
+        }
+
+        public void CheckExtensions()
+        {
+            var miniFunctions = new Dictionary<string, Action>()
+            {
+                {"show extensions", ShowExtensions },
+                {"add extension", AddExtension },
+                {BackMessage, () => { } }
+            };
+
+            bool keepGoing = true;
+
+            while (keepGoing)
+            {
+                keepGoing = RunOptions(miniFunctions, "EXTENSIONS");
+            }
+        }
+
+        private void ShowExtensions()
+        {
+            bool tryAgain = true;
+
+            List<string> extensions = new List<string>();
+            foreach (var extension in Startup.Extensions)
+                extensions.Add(extension.ExtensionName);
+
+            extensions.Add(BackMessage);
+
+            while (tryAgain)
+            {
+                AnsiConsole.Clear();
+                var pickedExtension = AnsiConsole.Prompt(
+                    new SelectionPrompt<string>()
+                    .Title("Pick an extension for further options: ")
+                    .AddChoices(extensions));
+
+
+                if (pickedExtension != BackMessage)
+                {
+                    var extension = Startup.Extensions.FirstOrDefault(c => c.ExtensionName == pickedExtension);
+
+                    ShowExtension(extension!);
+
+                    AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue.... [/]");
+                    Console.ReadLine();
+                }
+                else
+                    tryAgain = false;
+            }
+        }
+
+        private void AddExtension()
+        {
+            var newExtension = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter the name for a new extension: [/]"));
+
+            List<string> categories = new List<string>();
+            foreach (var name in Startup.CategoryNames)
+            {
+                categories.Add(name);
+            }
+            categories.Add(BackMessage);
+
+            var categoryPick = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                .Title("[magenta]Pick the category for the extension: [/]"));
+
+            bool confirm = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Add extension with the name: [/][cyan]{newExtension}[/][magenta] and in category: [/][cyan]{categoryPick}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirm)
+            {
+                var extension = new Extension()
+                {
+                    ExtensionName = newExtension
+                };
+                var category = Startup.Categories.FirstOrDefault(c => c.CategoryName == categoryPick);
+
+                try
+                {
+                    Startup.ExtensionRepository.AddEntity(extension);
+                    Startup.ExtensionRepository.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]New extension not added[/]");
+            }
+        }
+
+        private void ShowExtension(Extension extension)
+        {
+            bool tryAgain = true;
+
+            while (tryAgain)
+            {
+                var moreOnExtension = new Dictionary<string, Func<Extension, bool>>
+                {
+                    {"edit extension name", EditExtensionName },
+                    {"change category", ChangeExtensionCategory },
+                    {"remove extension", RemoveExtension},
+                };
+
+                AnsiConsole.Clear();
+
+                AnsiConsole.MarkupLine("[underline magenta]Extension[/]");
+                AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{extension.ExtensionName}[/]");
+                AnsiConsole.MarkupLine($"[magenta]Category: - [/][cyan]{extension.Category.CategoryName}[/]");
+
+                Console.WriteLine();
+                Console.WriteLine();
+
+                HashSet<string> moreOptions = new HashSet<string>();
+
+                foreach (var option in moreOnExtension.Keys)
+                {
+                    moreOptions.Add(option);
+                }
+                moreOptions.Add(BackMessage);
+
+                var userChoice = AnsiConsole.Prompt(
+                    new SelectionPrompt<string>()
+                    .AddChoices(moreOptions));
+
+                if (userChoice == BackMessage)
+                    tryAgain = false;
+                else
+                {
+                    moreOnExtension[userChoice](extension);
+                }
+            }
+        }
+
+        public bool EditExtensionName(Extension extension)
+        {
+            var updateExtensionName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new extension name[/]"));
+
+            bool confirmName = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Update extension name from: [/][cyan]{extension.ExtensionName}[/][magenta] to [/][cyan]{updateExtensionName}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirmName)
+            {
+                try
+                {
+                    extension.ExtensionName = updateExtensionName;
+
+                    Startup.ExtensionRepository.UpdateEntity(extension);
+                    Startup.ExtensionRepository.SaveChanges();
+
+                    AnsiConsole.MarkupLine($"[green]Extension name successfully updated to [/][cyan]{extension.ExtensionName}[/]");
+
+                    //Startup.Extensions = (List<Extension>)Startup.ExtensionRepository.GetAll();
+                    //Startup.ExcludedExtensions = Startup.GetExcludedExtensions();
+                    //Startup.ExtensionCategories = Startup.GetExtensionCategory();
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine($"[red]Update canceled[/]");
+            }
+            return true;
+        }
+
+        public bool ChangeExtensionCategory(Extension extension)
+        {
+            List<string> categories = new List<string>();
+            foreach (var name in Startup.CategoryNames)
+            {
+                categories.Add(name);
+            }
+            categories.Add(BackMessage);
+            categories.Remove(extension.Category.CategoryName);
+
+            var categoryChange = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                .Title("[magenta]Pick the category to change to: [/]"));
+
+            var confirm = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Update extension category from: [/][cyan]{extension.Category.CategoryName}[/][magenta] to [/][cyan]{categoryChange}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirm)
+            {
+                var category = Startup.Categories.FirstOrDefault(c => c.CategoryName == categoryChange);
+                try
+                {
+                    extension.CategoryId = category!.Id;
+                    extension.Category = category!;
+
+                    Startup.ExtensionRepository.UpdateEntity(extension);
+                    Startup.ExtensionRepository.SaveChanges();
+
+                    AnsiConsole.MarkupLine($"[green]Extension category successfully updated to [/][cyan]{extension.Category.CategoryName}[/]");
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine($"[red]Update canceled[/]");
+            }
+
+            return true;
+        }
+
+        public bool RemoveExtension(Extension extension)
+        {
+            bool confirm = AnsiConsole.Prompt(
+                new TextPrompt<bool>($"Remove category: {extension.ExtensionName}?")
+                    .AddChoice(true)
+                    .AddChoice(false)
+                    .DefaultValue(true)
+                    .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirm)
+            {
+                try
+                {
+                    Startup.ExtensionRepository.DeleteEntity(extension.Id);
+                    Startup.ExtensionRepository.SaveChanges();
+
+                    AnsiConsole.MarkupLine($"[red]Removed extension [/][cyan]{extension.ExtensionName}[/]");
+
+                    //Startup.Categories = (List<Category>)Startup.CategoryRepository.GetAll();
+                    //Startup.CategoryNames = Startup.GetCategoryNames();
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: [/][cyan]{ex.Message}[/]");
+                }
             }
             else
             {
                 AnsiConsole.MarkupLine($"[green]Delete canceled[/]");
             }
 
-            ShowCategories();
-        }
-
-        public void CheckExtensions()
-        {
-
+            return true;
         }
 
         public void CheckIssues()
