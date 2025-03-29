@@ -1,5 +1,7 @@
 ﻿using FileSort.DataModels;
+using FileSort.AppDirectory;
 using FileSort.Display;
+using FileSort.Startup;
 using FileSort.Repositories;
 using Spectre.Console;
 using System;
@@ -8,11 +10,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FileSort.Models
+namespace FileSort.FileHandling
 {
-    internal class Sort
+    internal class Sort : BaseFileHandling
     {
-        public Sort(SourceDirectory sourceDirectory, DestinationDirectory destinationDirectory, Startup startup)
+        public Sort(SourceDirectory sourceDirectory, DestinationDirectory destinationDirectory, Startup.Startup startup)
+            : base(startup.FailedMovesRepository)
         {
             SourceDirectory = sourceDirectory ?? throw new ArgumentNullException(nameof(sourceDirectory), $"{nameof(sourceDirectory)} cannot be null in {nameof(Sort)} initialization");
             DestinationDirectory = destinationDirectory ?? throw new ArgumentNullException(nameof(destinationDirectory), $"{nameof(destinationDirectory)} cannot be null in {nameof(Sort)} initialization");
@@ -21,49 +24,12 @@ namespace FileSort.Models
 
         private SourceDirectory SourceDirectory { get; set; }
         private DestinationDirectory DestinationDirectory { get; set; }
-        private Startup Startup { get; set; }
-
-        // this dictionary keeps track of the location of a file
-        // true if at destination and sorted
-        // false if still at source
-
-        // method dedicated to moving a file
-        private void MoveFile(string file, string destination)
-        {
-            try
-            {
-                File.Move(file, destination);
-
-                AnsiConsole.MarkupLine($"[green]\tMoved\n\t - [/][cyan]{file}[/][green] to [/][green]{destination}[/]");
-                //SpecialPrinting.PrintColored($"\tMoved\n\t - {file} to {destination}", ConsoleColor.Green, file, destination);
-            }
-            catch (Exception ex)
-            {
-                FailedMoves failedMove = new FailedMoves()
-                {
-                    FileName = file,
-                    SourceFolderPath = Path.GetDirectoryName(file)!,
-                    DestinationFolderPath = destination,
-                    FailureMessage = ex.Message,
-                    IsResolved = false,
-
-                };
-                Startup.FailedMovesRepository.AddEntity(failedMove);
-
-                Console.WriteLine();
-                AnsiConsole.MarkupLine($"[red]\tError moving file: [/][cyan]{file}[/][red]\n\tto [/][cyan]{destination}[/]");
-                //SpecialPrinting.PrintColored($"\tError moving file: {file}\n\tto {destination}", ConsoleColor.Red, file, destination);
-                Console.WriteLine();
-                //AnsiConsole.WriteException(ex);
-                //SpecialPrinting.PrintColored(ex.Message, ConsoleColor.Red);
-            }
-        }
+        private Startup.Startup Startup { get; set; }
 
         // sort the files into their categories
         public void SortFiles()
         {
             AnsiConsole.MarkupLine("[yellow]Sorting files... [/]");
-            //SpecialPrinting.PrintColored("Sorting files... ", ConsoleColor.Yellow);
 
             string subDirectory;
 
@@ -78,7 +44,6 @@ namespace FileSort.Models
                     if (Startup.ExcludedExtensions.Contains(extension))
                     {
                         AnsiConsole.MarkupLine($"[yellow]Skipped file: [/][cyan]{fileInfo.Name}[/][yellow] with excluded extension: [/][cyan]{extension}[/][yellow]\nFile not moved[/]");
-                        //SpecialPrinting.PrintColored($"Skipped file: {fileInfo.Name} with excluded extension: {extension}\nFile not moved", ConsoleColor.Yellow, fileInfo.Name, extension);
 
                         continue;
                     }
@@ -116,44 +81,12 @@ namespace FileSort.Models
             }
             else
             {
-                AnsiConsole.MarkupLine("[darkyellow]No files to sort[/]");
+                AnsiConsole.MarkupLine("[olive]No files to sort[/]");
                 //SpecialPrinting.PrintColored("No files to sort", ConsoleColor.DarkYellow);
             }
 
             AnsiConsole.WriteLine("\n");
         }
 
-        // reverse the move for the files
-        public void ReverseSort()
-        {
-            Dictionary<string, string> movedFiles = new Dictionary<string, string>();
-            movedFiles = Startup.FileDataModelRepository.GetInstanceMovedFiles(Startup.ApplicationInstance.ApplicationId);
-
-            if (movedFiles.Count > 0)
-            {
-                AnsiConsole.MarkupLine("[yellow]Reversing files sort... [/]");
-                //SpecialPrinting.PrintColored("Reversing files sort... ", ConsoleColor.Yellow);
-
-                foreach (var destination in movedFiles.Keys)
-                {
-                    FileInfo fileInfo = new FileInfo(destination);
-                    FileDataModel fileDataModel = Startup.FileDataModelRepository
-                        .GetByFileNameAndExtension(Path.GetFileNameWithoutExtension(destination), fileInfo.Extension)!;
-
-                    fileDataModel.IsSorted = false;
-                    Startup.FileDataModelRepository.UpdateEntity(fileDataModel);
-                    Startup.FileDataModelRepository.SaveChanges();
-
-                    MoveFile(movedFiles[destination], destination);
-                    movedFiles.Remove(destination);
-                }
-
-                AnsiConsole.WriteLine("\n");
-            }
-            else
-            {
-                AnsiConsole.MarkupLine("[darkyellow]Files not sorted yet![/]");
-            }
-        }
     }
 }

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FileSort.Models
+namespace FileSort.AppDirectory
 {
     internal class SourceDirectory : BaseDirectory
     {

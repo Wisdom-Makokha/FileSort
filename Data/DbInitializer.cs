@@ -105,7 +105,7 @@ namespace FileSort.Data
             }
             //else
             //{
-            //    AnsiConsole.MarkupLine("[darkyellow]Categories table already seeded[/]");
+            //    AnsiConsole.MarkupLine("[olive]Categories table already seeded[/]");
             //    SpecialPrinting.PrintColored("Categories table already seeded", ConsoleColor.DarkYellow);
             //}
 
@@ -291,7 +291,7 @@ namespace FileSort.Data
             }
             //else
             //{
-            //    AnsiConsole.MarkupLine("[darkyellow]Extensions table already seeded[/]");
+            //    AnsiConsole.MarkupLine("[olive]Extensions table already seeded[/]");
             //    SpecialPrinting.PrintColored("Extensions table already seeded", ConsoleColor.DarkYellow);
             //}
 

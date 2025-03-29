@@ -1,7 +1,8 @@
 ﻿using FileSort.Data;
 using FileSort.DataModels;
+using FileSort.AppDirectory;
 using FileSort.Display;
-using FileSort.Models;
+using FileSort.Startup;
 using FileSort.Repositories;
 using Spectre.Console;
 
@@ -13,14 +14,12 @@ namespace FileSort
         {
             try
             {
-                var startup = new Startup();
+                var startup = new Startup.Startup();
 
                 //Console.WriteLine(startup.AppSettings.ToString());
-                SourceDirectory sourceDirectory = new SourceDirectory(startup.ExcludedExtensions, startup.AppSettings.SourceFolder);
 
-                //BaseInterface mainInterface = new BaseInterface(startup);
-
-                //mainInterface.HomeInterface();
+                var mainInterface = new MainInterface(startup);
+                mainInterface.Home();
 
                 AnsiConsole.MarkupLine("[yellow]Press Enter to Exit[/]");
                 //Console.WriteLine("Press Enter to exit");
@@ -33,7 +32,7 @@ namespace FileSort
             {
                 AnsiConsole.WriteException(ex, ExceptionFormats.ShortenMethods);
                 
-                AnsiConsole.MarkupLine($"[red]Exception caught\nLocated[/][cyan]{ex.StackTrace}[/][red]\nException Type: [/][cyan]{ex.GetType().Name}[/][red]\nMessage: [/][cyan]{ex.Message}[/]");
+                //AnsiConsole.MarkupLine($"[red]Exception caught\nLocated[/][cyan]{ex.StackTrace}[/][red]\nException Type: [/][cyan]{ex.GetType().Name}[/][red]\nMessage: [/][cyan]{ex.Message}[/]");
 
                 //SpecialPrinting.PrintColored(
                 //    $"Exception caught\nLocated{ex.StackTrace}\nException Type: {ex.GetType().Name}\nMessage: {ex.Message}",

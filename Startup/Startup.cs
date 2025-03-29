@@ -3,6 +3,7 @@ using FileSort.DataModels;
 using FileSort.Display;
 using FileSort.Migrations;
 using FileSort.Repositories;
+using FileSort.Settings;
 using Microsoft.Extensions.Configuration;
 using Spectre.Console;
 using System;
@@ -11,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FileSort.Models
+namespace FileSort.Startup
 {
     internal class Startup
     {
@@ -64,7 +65,7 @@ namespace FileSort.Models
         public Dictionary<string, string> ExtensionCategories { get; set; } = new Dictionary<string, string>();
 
         // methods
-        private List<string> GetExcludedExtensions()
+        public List<string> GetExcludedExtensions()
         {
             var excludedExtensions = from Extension extension in Extensions
                                      join Category category in Categories
@@ -77,14 +78,13 @@ namespace FileSort.Models
             {
                 result.Add(extension);
 
-                AnsiConsole.MarkupLine($"[magenta]Excluded Extension: [/][cyan]{extension}[/]");
-                //SpecialPrinting.PrintColored($"Excluded Extension: {extension}", ConsoleColor.Magenta, extension);
+                //AnsiConsole.MarkupLine($"[magenta]Excluded Extension: [/][cyan]{extension}[/]");
             }
 
             return result;
         }
 
-        private Dictionary<string, string> GetExtensionCategory()
+        public Dictionary<string, string> GetExtensionCategory()
         {
             var extensionCategory = from Extension extension in Extensions
                                     join Category category in Categories
@@ -100,16 +100,15 @@ namespace FileSort.Models
             foreach (var extension in extensionCategory)
             { result.Add(extension.newExtension, extension.newCategory); }
 
-            foreach (var extension in result.Keys)
-            {
-                AnsiConsole.MarkupLine($"[magenta]Extension: [/][cyan]{extension,-15}[/][magenta] - Category: [/][cyan]{result[extension]}[/]");
-                //SpecialPrinting.PrintColored($"Extension: {extension,-15} - Category: {result[extension]}", ConsoleColor.Magenta, extension, result[extension]);
-            }
+            //foreach (var extension in result.Keys)
+            //{
+            //    AnsiConsole.MarkupLine($"[magenta]Extension: [/][cyan]{extension,-15}[/][magenta] - Category: [/][cyan]{result[extension]}[/]");
+            //}
 
             return result;
         }
 
-        private List<string> GetCategoryNames()
+        public List<string> GetCategoryNames()
         {
             List<string> result = new List<string>();
 
@@ -119,6 +118,14 @@ namespace FileSort.Models
             }
 
             return result;
+        }
+
+        public void GetAppSettings()
+        {
+            var config = SettingsConfigurationHelper.BuildConfiguration();
+
+            AppSettings = config.GetSection("AppSettings").Get<AppSettings>()
+                ?? throw new ArgumentNullException(nameof(AppSettings), $"{nameof(AppSettings)} cannot be null in {nameof(Startup)} initialization");
         }
     }
 }
