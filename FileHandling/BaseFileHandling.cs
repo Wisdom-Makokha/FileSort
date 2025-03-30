@@ -24,9 +24,6 @@ namespace FileSort.FileHandling
             try
             {
                 File.Move(file, destination);
-
-                AnsiConsole.MarkupLine($"[green]\tMoved\n\t - [/][cyan]{file}[/][green] to [/][green]{destination}[/]");
-                //SpecialPrinting.PrintColored($"\tMoved\n\t - {file} to {destination}", ConsoleColor.Green, file, destination);
             }
             catch (Exception ex)
             {
@@ -43,10 +40,7 @@ namespace FileSort.FileHandling
 
                 Console.WriteLine();
                 AnsiConsole.MarkupLine($"[red]\tError moving file: [/][cyan]{file}[/][red]\n\tto [/][cyan]{destination}[/]");
-                //SpecialPrinting.PrintColored($"\tError moving file: {file}\n\tto {destination}", ConsoleColor.Red, file, destination);
                 Console.WriteLine();
-                //AnsiConsole.WriteException(ex);
-                //SpecialPrinting.PrintColored(ex.Message, ConsoleColor.Red);
             }
         }
     }

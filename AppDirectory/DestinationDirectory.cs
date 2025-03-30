@@ -15,8 +15,7 @@ namespace FileSort.AppDirectory
         public DestinationDirectory(List<string> categories, string destinationFolder)
             : base(destinationFolder)
         {
-            AnsiConsole.MarkupLine($"[yellow]Destination directory - [/][cyan]{destinationFolder}[/]");
-            //SpecialPrinting.PrintColored($"Destination directory - {destinationFolder}", ConsoleColor.Yellow, destinationFolder);
+            //AnsiConsole.MarkupLine($"[yellow]Destination directory - [/][cyan]{destinationFolder}[/]");
 
             Categories = categories;
             CheckDestinationSubDirectories();
@@ -25,7 +24,6 @@ namespace FileSort.AppDirectory
         private void CheckDestinationSubDirectories()
         {
             AnsiConsole.MarkupLine("[yellow]Checking destination directory subdirectories... [/]");
-            //SpecialPrinting.PrintColored("Checking destination directory subdirectories... ", ConsoleColor.Yellow);
 
             foreach (var category in Categories)
             {
@@ -37,7 +35,6 @@ namespace FileSort.AppDirectory
                     {
                         Directory.CreateDirectory(destination);
                         AnsiConsole.MarkupLine($"[green]Created: [/][cyan]{category}[/]");
-                        //SpecialPrinting.PrintColored($"Created: {category}", ConsoleColor.Green, category);
                     }
                     catch
                     {

@@ -29,12 +29,14 @@ namespace FileSort.FileHandling
         // sort the files into their categories
         public void SortFiles()
         {
-            AnsiConsole.MarkupLine("[yellow]Sorting files... [/]");
+            //AnsiConsole.MarkupLine("[yellow]Sorting files... [/]");
 
             string subDirectory;
 
             if (SourceDirectory.SourceFiles.Count > 0)
             {
+                int fileCount = 0;
+                int padWidth = 4;
                 foreach (var file in SourceDirectory.SourceFiles)
                 {
                     FileInfo fileInfo = new FileInfo(file);
@@ -57,8 +59,15 @@ namespace FileSort.FileHandling
                             CategoryId = Startup.Categories.Single(c => c.CategoryName == subDirectory).Id
                         };
 
-                        Startup.ExtensionRepository.AddEntity(newExtension);
-                        Startup.ExtensionRepository.SaveChanges();
+                        try
+                        {
+                            Startup.ExtensionRepository.AddEntity(newExtension);
+                            Startup.ExtensionRepository.SaveChanges();
+                        }
+                        catch (Exception ex)
+                        {
+                            AnsiConsole.MarkupLine($"Error: {ex.Message}");
+                        }
                     }
 
                     FileDataModel fileDataModel = new FileDataModel()
@@ -72,17 +81,27 @@ namespace FileSort.FileHandling
                         IsSorted = true,
                     };
 
-                    Startup.FileDataModelRepository.AddEntity(fileDataModel);
-                    Startup.FileDataModelRepository.SaveChanges();
+                    try
+                    {
+                        Startup.FileDataModelRepository.AddEntity(fileDataModel);
+                        Startup.FileDataModelRepository.SaveChanges();
 
-                    string destination = Path.Combine(Path.Combine(DestinationDirectory.DirectoryPath, subDirectory), Path.GetFileName(file));
-                    MoveFile(file, destination);
+                        string destination = Path.Combine(Path.Combine(DestinationDirectory.DirectoryPath, subDirectory), Path.GetFileName(file));
+                        MoveFile(file, destination);
+                        AnsiConsole.MarkupLine($"[green]{fileCount, 4}.Filename[/][cyan]{fileDataModel.FileName}[/]");
+                        AnsiConsole.MarkupLine($"[green]{" ", 4}.Source - [/][cyan]{fileDataModel.SourceFolderPath}[/]");
+                        AnsiConsole.MarkupLine($"[green]{" ", 4}.Destination - [/][cyan]{fileDataModel.DestinationFolderPath}[/]");
+                        Console.WriteLine();
+                    }
+                    catch (Exception ex)
+                    {
+                        AnsiConsole.MarkupLine($"Error: {ex.Message}");
+                    }
                 }
             }
             else
             {
                 AnsiConsole.MarkupLine("[olive]No files to sort[/]");
-                //SpecialPrinting.PrintColored("No files to sort", ConsoleColor.DarkYellow);
             }
 
             AnsiConsole.WriteLine("\n");

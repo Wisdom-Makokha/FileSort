@@ -61,6 +61,9 @@ namespace FileSort.Display
             {
                 options[userChoice]();
 
+                AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue[/]");
+                Console.ReadLine();
+
                 return true;
             }
         }
@@ -72,7 +75,10 @@ namespace FileSort.Display
                 {"sort", SortFiles },
                 //{"reverse recent sort", ReverseSort },
                 {"sort history", CheckSortHistory },
-                {"settings", CheckSettings },
+                {"source folder", CheckSourceFolder },
+                {"destination folder", CheckDestinationFolder },
+                {"categories", CheckCategories },
+                {"extensions", CheckExtensions },
                 {"issue", CheckIssues },
                 {ExitMessage, ()=> { } }
             };
@@ -107,34 +113,15 @@ namespace FileSort.Display
 
         }
 
-        public void CheckSettings()
-        {
-            Dictionary<string, Action> InterfaceOptions = new Dictionary<string, Action>()
-            {
-                {"source folder", CheckSourceFolder },
-                {"destination folder", CheckDestinationFolder },
-                {"categories", CheckCategories },
-                {"extensions", CheckExtensions },
-                {BackMessage, () => { } }
-            };
-
-            bool keepGoing = true;
-
-            while (keepGoing)
-            {
-                AnsiConsole.Clear();
-                keepGoing = RunOptions(InterfaceOptions, "SETTINGS");
-            }
-        }
-
         public void CheckSourceFolder()
         {
             Dictionary<string, Action> miniFunctions = new Dictionary<string, Action>
             {
-                {"edit source folder", EditSourceFolder },
+                {"edit", EditSourceFolder },
                 {BackMessage, () => { } }
             };
 
+            AnsiConsole.Clear();
             AnsiConsole.MarkupLine($"[green]Source folder path - [/][cyan]{Startup.AppSettings.SourceFolder}[/]\n\n");
 
             bool KeepGoing = true;
@@ -146,42 +133,35 @@ namespace FileSort.Display
 
         private void EditSourceFolder()
         {
-            bool tryAgain = true;
+            AnsiConsole.Clear();
 
-            while (tryAgain)
+            Console.WriteLine();
+            var newFolderPath = AnsiConsole.Prompt(
+                new TextPrompt<string>("[magenta]Enter the new source folder full path: [/]")
+                    .DefaultValue(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)));
+
+            bool confirm = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Update source folder path from: [/][cyan]{Startup.AppSettings.SourceFolder}[/][magenta] to [/][cyan]{newFolderPath}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirm)
             {
-                AnsiConsole.Clear();
-
-                Console.WriteLine();
-                var newFolderPath = AnsiConsole.Prompt(
-                    new TextPrompt<string>("[magenta]Enter the new source folder full path: [/]")
-                        .DefaultValue(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)));
-
-                bool confirm = AnsiConsole.Prompt(
-                   new TextPrompt<bool>($"[magenta]Update source folder path from: [/][cyan]{Startup.AppSettings.SourceFolder}[/][magenta] to [/][cyan]{newFolderPath}[/]?")
-                       .AddChoice(true)
-                       .AddChoice(false)
-                       .DefaultValue(false)
-                       .WithConverter(choice => choice ? "y" : "n"));
-
-                if (confirm)
+                if (Directory.Exists(newFolderPath))
                 {
-                    if (Directory.Exists(newFolderPath))
-                    {
-                        SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Source);
-                        Startup.GetAppSettings();
-
-                        tryAgain = false;
-                    }
-                    else
-                    {
-                        AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
-                    }
+                    SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Source);
+                    Startup.GetAppSettings();
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine("[red]Edit canceled[/]");
+                    AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
                 }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]Edit canceled[/]");
             }
         }
 
@@ -189,10 +169,11 @@ namespace FileSort.Display
         {
             Dictionary<string, Action> miniFunctions = new Dictionary<string, Action>
             {
-                {"set", EditDestinationFolder },
+                {"edit", EditDestinationFolder },
                 {BackMessage, () => { } }
             };
 
+            AnsiConsole.Clear();
             AnsiConsole.MarkupLine($"[green]Destination folder path - [/][cyan]{Startup.AppSettings.DestinationFolder}[/]\n\n");
 
             bool KeepGoing = true;
@@ -204,41 +185,34 @@ namespace FileSort.Display
 
         private void EditDestinationFolder()
         {
-            bool tryAgain = true;
+            AnsiConsole.Clear();
 
-            while (tryAgain)
+            Console.WriteLine();
+            var newFolderPath = AnsiConsole.Prompt(
+                new TextPrompt<string>("[magenta]Enter the new destination folder full path: [/]"));
+
+            bool confirm = AnsiConsole.Prompt(
+               new TextPrompt<bool>($"[magenta]Update destination folder path from: [/][cyan]{Startup.AppSettings.DestinationFolder}[/][magenta] to [/][cyan]{newFolderPath}[/]?")
+                   .AddChoice(true)
+                   .AddChoice(false)
+                   .DefaultValue(false)
+                   .WithConverter(choice => choice ? "y" : "n"));
+
+            if (confirm)
             {
-                AnsiConsole.Clear();
-
-                Console.WriteLine();
-                var newFolderPath = AnsiConsole.Prompt(
-                    new TextPrompt<string>("[magenta]Enter the new destination folder full path: [/]"));
-
-                bool confirm = AnsiConsole.Prompt(
-                   new TextPrompt<bool>($"[magenta]Update destination folder path from: [/][cyan]{Startup.AppSettings.DestinationFolder}[/][magenta] to [/][cyan]{newFolderPath}[/]?")
-                       .AddChoice(true)
-                       .AddChoice(false)
-                       .DefaultValue(false)
-                       .WithConverter(choice => choice ? "y" : "n"));
-
-                if (confirm)
+                if (Directory.Exists(newFolderPath))
                 {
-                    if (Directory.Exists(newFolderPath))
-                    {
-                        SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Destination);
-                        Startup.GetAppSettings();
-
-                        tryAgain = false;
-                    }
-                    else
-                    {
-                        AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
-                    }
+                    SettingsConfigurationHelper.UpdateFolderPath(newFolderPath, SettingsConfigurationHelper.FolderType.Destination);
+                    Startup.GetAppSettings();
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine("[red]Edit canceled[/]");
+                    AnsiConsole.MarkupLine($"[red]Invalid folder path given[/]");
                 }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]Edit canceled[/]");
             }
         }
 
@@ -349,7 +323,7 @@ namespace FileSort.Display
                 AnsiConsole.MarkupLine("[underline magenta]Category[/]");
                 AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{category.CategoryName}[/]");
                 AnsiConsole.MarkupLine($"[magenta]Description: - [/][cyan]{category.CategoryDescription}[/]");
-                AnsiConsole.MarkupLine($"[magenta]Extensions: - [/]");
+                AnsiConsole.MarkupLine($"[magenta]Extensions: [/]");
                 foreach (var item in category.Extensions)
                 {
                     AnsiConsole.MarkupLine($"\t[magenta]- [/][cyan]{item.ExtensionName}[/]");
@@ -553,7 +527,8 @@ namespace FileSort.Display
 
             var categoryPick = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                .Title("[magenta]Pick the category for the extension: [/]"));
+                .Title("[magenta]Pick the category for the extension: [/]")
+                .AddChoices(Startup.CategoryNames));
 
             bool confirm = AnsiConsole.Prompt(
                new TextPrompt<bool>($"[magenta]Add extension with the name: [/][cyan]{newExtension}[/][magenta] and in category: [/][cyan]{categoryPick}[/]?")
@@ -679,7 +654,8 @@ namespace FileSort.Display
 
             var categoryChange = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                .Title("[magenta]Pick the category to change to: [/]"));
+                .Title("[magenta]Pick the category to change to: [/]")
+                .AddChoices(categories));
 
             var confirm = AnsiConsole.Prompt(
                new TextPrompt<bool>($"[magenta]Update extension category from: [/][cyan]{extension.Category.CategoryName}[/][magenta] to [/][cyan]{categoryChange}[/]?")
@@ -750,7 +726,8 @@ namespace FileSort.Display
 
         public void CheckIssues()
         {
-
+            // deal with failed moves for files
+            // unrecognised file extensions 
         }
     }
 }
