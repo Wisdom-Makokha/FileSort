@@ -23,6 +23,23 @@ namespace FileSort.Display.Managers
             _categoryNames = _categories.Select(c => c.CategoryName).ToList();
         }
 
+        public void CheckCategories()
+        {
+            var miniFunctions = new Dictionary<string, Action>()
+            {
+                {"show categories", ShowCategories },
+                {"add category", AddCategory },
+                {MainInterface.BackMessage, () => { } }
+            };
+
+            bool keepGoing = true;
+
+            while (keepGoing)
+            {
+                keepGoing = MainInterface.RunOptions(miniFunctions, "EXTENSIONS");
+            }
+        }
+
         public void ShowCategories()
         {
             var categories = new List<string>(_categoryNames)

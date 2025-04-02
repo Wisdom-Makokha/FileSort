@@ -9,5 +9,8 @@ namespace FileSort.Display.Interfaces
     internal interface IStatManager
     {
         void CheckSortHistory();
+        void ShowRecentStats();
+        void SelectApplicationInstanceStats();
+        void ShowCombinedStats();
     }
 }

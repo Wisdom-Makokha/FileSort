@@ -9,6 +9,7 @@ namespace FileSort.Display.Interfaces
 {
     internal interface ICategoryManager
     {
+        void CheckCategories();
         void ShowCategories();
         void AddCategory();
         void ShowCategory(Category category);

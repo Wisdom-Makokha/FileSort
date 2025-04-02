@@ -9,6 +9,7 @@ namespace FileSort.Display.Interfaces
 {
     internal interface IExtensionManager
     {
+        void CheckExtensions();
         void ShowExtensions();
         void AddExtension();
         void ShowExtension(Extension extension);

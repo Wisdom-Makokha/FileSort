@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace FileSort.Display.Interfaces
 {
-    internal interface ISortManager
+    internal interface IIssuesManager
     {
-        void SortFiles();
-        //void ReverseSort();
+        void CheckIssues();
     }
 }

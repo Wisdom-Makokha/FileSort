@@ -17,12 +17,29 @@ namespace FileSort.Display.Managers
         private readonly List<string> _extensionNames;
         private readonly List<Category> _categories;
 
-        public ExtensionManager(IExtensionRepository extensionRepository, List<Category> categories)
+        public ExtensionManager(IExtensionRepository extensionRepository, ICategoryRepository categoryRepository)
         {
             _extensionRepository = extensionRepository;
             _extensions = (List<Extension>)_extensionRepository.GetAll();
             _extensionNames = _extensions.Select(e => e.ExtensionName).ToList();
-            _categories = categories;
+            _categories = (List<Category>)categoryRepository.GetAll();
+        }
+
+        public void CheckExtensions()
+        {
+            var miniFunctions = new Dictionary<string, Action>()
+            {
+                {"show extensions", ShowExtensions },
+                {"add extension", AddExtension },
+                {MainInterface.BackMessage, () => { } }
+            };
+
+            bool keepGoing = true;
+
+            while (keepGoing)
+            {
+                keepGoing = MainInterface.RunOptions(miniFunctions, "EXTENSIONS");
+            }
         }
 
         public void ShowExtensions()

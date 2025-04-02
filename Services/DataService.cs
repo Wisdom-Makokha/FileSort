@@ -1,11 +1,6 @@
 ﻿using FileSort.Data;
 using FileSort.Data.Interfaces;
 using FileSort.DataModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FileSort.Services
 {
@@ -44,10 +39,8 @@ namespace FileSort.Services
 
         public void LoadInitialData()
         {
-            Categories = (List<Category>) _categoryRepository.GetAll();
-            Extensions = (List<Extension>) _extensionRepository.GetAll();
-
-            //CategoryNames = Categories.Select(c => c.CategoryName).ToList();
+            Categories = _categoryRepository.GetAll().ToList();
+            Extensions = _extensionRepository.GetAll().ToList();
         }
     }
 }

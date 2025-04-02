@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using FileSort.Services;
 using FileSort.Data.Repositories;
 using FileSort.Data.Interfaces;
+using FileSort.Display.Interfaces;
+using FileSort.Display.Managers;
 
 namespace FileSort
 {
@@ -34,6 +36,15 @@ namespace FileSort
             services.AddSingleton<IDataService, DataService>();
             services.AddSingleton<Startup.Startup>();
 
+            services.AddSingleton<ICategoryManager, CategoryManager>();
+            services.AddSingleton<IExtensionManager, ExtensionManager>();
+            services.AddSingleton<IFolderManager, FolderManager>();
+            services.AddSingleton<ISortManager, SortManager>();
+            services.AddSingleton<IStatManager, StatManager>();
+            services.AddSingleton<IIssuesManager, IssuesManager>();
+
+            services.AddSingleton<MainInterface>();
+
             var serviceProvider = services.BuildServiceProvider();
 
             try
@@ -45,6 +56,9 @@ namespace FileSort
 
                 var startup = serviceProvider.GetRequiredService<Startup.Startup>();
                 startup.Initialize();
+
+                var mainInterface = serviceProvider.GetRequiredService<MainInterface>();
+                mainInterface.Home();
             }
             catch (Exception ex)
             {
@@ -54,6 +68,12 @@ namespace FileSort
             {
                 //startup.ApplicationInstanceRepository.SetClosingTime(startup.ApplicationInstance);
                 //startup.ApplicationInstanceRepository.SaveChanges();
+
+                // ensure db context is disposed
+                if(serviceProvider is  IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
 
                 Console.WriteLine("Press Enter to exit");
                 Console.ReadLine();

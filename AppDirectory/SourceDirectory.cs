@@ -13,7 +13,7 @@ namespace FileSort.AppDirectory
     internal class SourceDirectory : BaseDirectory
     {
         public List<string> SourceFiles { get; set; }
-        private List<Extension> ExcludedExtensions { get; set; }
+        private List<Extension> ExcludedExtensions { get; }
 
         public SourceDirectory(List<Extension> excludedExtensions, string sourceFolder)
             : base(sourceFolder)

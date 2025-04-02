@@ -3,7 +3,7 @@ using FileSort.Data.Interfaces;
 using FileSort.DataModels;
 using FileSort.Display;
 using FileSort.Migrations;
-using FileSort.Repositories;
+using FileSort.Data.Repositories;
 using FileSort.Services;
 using FileSort.Settings;
 using Microsoft.Extensions.Configuration;
@@ -33,7 +33,14 @@ namespace FileSort.Startup
         public List<Category> Categories => _dataService.Categories;
         public List<Extension> Extensions => _dataService.Extensions;
 
-        public Startup(IConfigurationService configurationService, IDataService dataService, IApplicationInstanceRepository applicationInstanceRepository, IFileDataModelRepository fileDataModelRepository, IExtensionRepository extensionRepository, ICategoryRepository categoryRepository, IFailedMovesRepository failedMovesRepository)
+        public Startup(
+            IConfigurationService configurationService, 
+            IDataService dataService, 
+            IApplicationInstanceRepository applicationInstanceRepository, 
+            IFileDataModelRepository fileDataModelRepository, 
+            IExtensionRepository extensionRepository, 
+            ICategoryRepository categoryRepository, 
+            IFailedMovesRepository failedMovesRepository)
         {
             _configurationService = configurationService;
             _dataService = dataService;

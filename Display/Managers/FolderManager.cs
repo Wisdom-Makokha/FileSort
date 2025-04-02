@@ -17,10 +17,10 @@ namespace FileSort.Display.Managers
         private string _sourceFolderStr = "Source folder";
         private string _destinationFolderStr = "Destination folder";
 
-        public FolderManager(AppSettings settings, IConfigurationService configurationService)
+        public FolderManager(IConfigurationService configurationService)
         {
-            _settings = settings;
             _configurationService = configurationService;
+            _settings = _configurationService.AppSettings;
         }
 
         public void CheckSourceFolder()
@@ -68,6 +68,10 @@ namespace FileSort.Display.Managers
 
                     AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue[/]");
                     Console.ReadLine();
+                }
+                else
+                {
+                    KeepGoing = false;
                 }
             }
         }
