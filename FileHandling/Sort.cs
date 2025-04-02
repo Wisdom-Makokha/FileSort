@@ -2,29 +2,45 @@
 using FileSort.AppDirectory;
 using FileSort.Display;
 using FileSort.Startup;
-using FileSort.Repositories;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FileSort.Data.Interfaces;
 
 namespace FileSort.FileHandling
 {
     internal class Sort : BaseFileHandling
     {
-        public Sort(SourceDirectory sourceDirectory, DestinationDirectory destinationDirectory, Startup.Startup startup)
-            : base(startup.FailedMovesRepository)
+        public Sort(
+            SourceDirectory sourceDirectory,
+            string destinationDirectoryPath,
+            Guid applicationInstanceId,
+            IFileDataModelRepository fileDataModelRepository,
+            IExtensionRepository extensionRepository,
+            IFailedMovesRepository failedMovesRepository,
+            List<Extension> extensions,
+            List<Category> categories)
+            : base(failedMovesRepository)
         {
-            SourceDirectory = sourceDirectory ?? throw new ArgumentNullException(nameof(sourceDirectory), $"{nameof(sourceDirectory)} cannot be null in {nameof(Sort)} initialization");
-            DestinationDirectory = destinationDirectory ?? throw new ArgumentNullException(nameof(destinationDirectory), $"{nameof(destinationDirectory)} cannot be null in {nameof(Sort)} initialization");
-            Startup = startup ?? throw new ArgumentNullException(nameof(startup), $"{nameof(startup)} cannot be null in {nameof(Sort)} initialization");
+            SourceDirectory = sourceDirectory;
+            DestinationDirectoryPath = destinationDirectoryPath;
+            ApplicationInstanceId = applicationInstanceId;
+            _fileDataModelRepository = fileDataModelRepository;
+            _extensionRepository = extensionRepository;
+            Extensions = extensions;
+            Categories = categories;
         }
 
-        private SourceDirectory SourceDirectory { get; set; }
-        private DestinationDirectory DestinationDirectory { get; set; }
-        private Startup.Startup Startup { get; set; }
+        private SourceDirectory SourceDirectory { get; }
+        private string DestinationDirectoryPath { get; }
+        private Guid ApplicationInstanceId { get; }
+        private IFileDataModelRepository _fileDataModelRepository { get; }
+        private IExtensionRepository _extensionRepository { get; }
+        List<Extension> Extensions { get; }
+        List<Category> Categories { get; }
 
         // sort the files into their categories
         public void SortFiles()
@@ -36,67 +52,63 @@ namespace FileSort.FileHandling
             if (SourceDirectory.SourceFiles.Count > 0)
             {
                 int fileCount = 0;
-                int padWidth = 4;
                 foreach (var file in SourceDirectory.SourceFiles)
                 {
                     FileInfo fileInfo = new FileInfo(file);
 
                     var extension = fileInfo.Extension;
 
-                    if (Startup.ExcludedExtensions.Contains(extension))
-                    {
-                        AnsiConsole.MarkupLine($"[yellow]Skipped file: [/][cyan]{fileInfo.Name}[/][yellow] with excluded extension: [/][cyan]{extension}[/][yellow]\nFile not moved[/]");
+                    var extensionObj = Extensions.FirstOrDefault(x => x.ExtensionName == extension);
+                    var category = extensionObj == null ? null : extensionObj.Category;
+                    subDirectory = category == null ? "other" : category.CategoryName;
 
-                        continue;
+                    subDirectory = "other";
+                    Extension newExtension = new Extension()
+                    {
+                        ExtensionName = extension,
+                        CategoryId = Categories.Single(c => c.CategoryName == subDirectory).Id
+                    };
+
+                    try
+                    {
+                        _extensionRepository.AddEntity(newExtension);
+                        _extensionRepository.SaveChanges();
                     }
-                    else if (Startup.ExtensionCategories!.TryGetValue(extension, out string? value)) { subDirectory = value; }
-                    else
+                    catch (Exception ex)
                     {
-                        subDirectory = "other";
-                        Extension newExtension = new Extension()
-                        {
-                            ExtensionName = extension,
-                            CategoryId = Startup.Categories.Single(c => c.CategoryName == subDirectory).Id
-                        };
-
-                        try
-                        {
-                            Startup.ExtensionRepository.AddEntity(newExtension);
-                            Startup.ExtensionRepository.SaveChanges();
-                        }
-                        catch (Exception ex)
-                        {
-                            AnsiConsole.MarkupLine($"Error: {ex.Message}");
-                        }
+                        AnsiConsole.MarkupLine($"Error: {ex.Message}");
                     }
 
                     FileDataModel fileDataModel = new FileDataModel()
                     {
                         FileName = Path.GetFileNameWithoutExtension(fileInfo.FullName),
-                        ExtensionId = Startup.Extensions.Single(e => e.ExtensionName == extension).Id,
-                        CategoryId = Startup.Categories.Single(c => c.CategoryName == subDirectory).Id,
+                        ExtensionId = Extensions.Single(e => e.ExtensionName == extension).Id,
+                        CategoryId = Categories.Single(c => c.CategoryName == subDirectory).Id,
                         SourceFolderPath = SourceDirectory.DirectoryPath,
-                        DestinationFolderPath = DestinationDirectory.DirectoryPath,
-                        ApplicationInstanceId = Startup.ApplicationInstance.ApplicationId,
+                        DestinationFolderPath = DestinationDirectoryPath,
+                        ApplicationInstanceId = ApplicationInstanceId,
                         IsSorted = true,
                     };
 
                     try
                     {
-                        Startup.FileDataModelRepository.AddEntity(fileDataModel);
-                        Startup.FileDataModelRepository.SaveChanges();
-
-                        string destination = Path.Combine(Path.Combine(DestinationDirectory.DirectoryPath, subDirectory), Path.GetFileName(file));
+                        string destination = Path.Combine(Path.Combine(DestinationDirectoryPath, subDirectory), Path.GetFileName(file));
                         MoveFile(file, destination);
-                        AnsiConsole.MarkupLine($"[green]{fileCount, 4}.Filename[/][cyan]{fileDataModel.FileName}[/]");
-                        AnsiConsole.MarkupLine($"[green]{" ", 4}.Source - [/][cyan]{fileDataModel.SourceFolderPath}[/]");
-                        AnsiConsole.MarkupLine($"[green]{" ", 4}.Destination - [/][cyan]{fileDataModel.DestinationFolderPath}[/]");
+
+                        _fileDataModelRepository.AddEntity(fileDataModel);
+                        _fileDataModelRepository.SaveChanges();
+
+                        AnsiConsole.MarkupLine($"[green]{fileCount,4}.Filename[/][cyan]{fileDataModel.FileName}[/]");
+                        AnsiConsole.MarkupLine($"[green]{" ",4}.Source - [/][cyan]{fileDataModel.SourceFolderPath}[/]");
+                        AnsiConsole.MarkupLine($"[green]{" ",4}.Destination - [/][cyan]{fileDataModel.DestinationFolderPath}[/]");
                         Console.WriteLine();
                     }
                     catch (Exception ex)
                     {
                         AnsiConsole.MarkupLine($"Error: {ex.Message}");
                     }
+
+                    fileCount++;
                 }
             }
             else

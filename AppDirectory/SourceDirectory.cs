@@ -1,4 +1,6 @@
-﻿using FileSort.Display;
+﻿using FileSort.DataModels;
+using FileSort.Display;
+using Microsoft.Extensions.Primitives;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
@@ -11,14 +13,21 @@ namespace FileSort.AppDirectory
     internal class SourceDirectory : BaseDirectory
     {
         public List<string> SourceFiles { get; set; }
-        private List<string> ExcludedExtensions { get; set; }
+        private List<Extension> ExcludedExtensions { get; set; }
 
-        public SourceDirectory(List<string> excludedExtensions, string sourceFolder)
+        public SourceDirectory(List<Extension> excludedExtensions, string sourceFolder)
             : base(sourceFolder)
         {
             //AnsiConsole.MarkupLine($"[yellow]Source directory - [/][cyan]{sourceFolder}[/]");
 
             ExcludedExtensions = excludedExtensions;
+
+            foreach (var extension in excludedExtensions)
+            {
+                AnsiConsole.MarkupLine(extension.ExtensionName);
+            }
+            Console.ReadLine();
+
             SourceFiles = GetSourceFiles();
         }
 
@@ -34,7 +43,9 @@ namespace FileSort.AppDirectory
             {
                 var extension = Path.GetExtension(file);
 
-                if (!ExcludedExtensions.Contains(extension))
+                var extensionObj = ExcludedExtensions.FirstOrDefault(e => e.ExtensionName == extension);
+
+                if (extensionObj != null)
                     sourceFiles.Add(file);
             }
 

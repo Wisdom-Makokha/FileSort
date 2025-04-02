@@ -1,8 +1,10 @@
 ﻿using FileSort.Data;
+using FileSort.Data.Interfaces;
 using FileSort.DataModels;
 using FileSort.Display;
 using FileSort.Migrations;
 using FileSort.Repositories;
+using FileSort.Services;
 using FileSort.Settings;
 using Microsoft.Extensions.Configuration;
 using Spectre.Console;
@@ -16,116 +18,37 @@ namespace FileSort.Startup
 {
     internal class Startup
     {
-        public Startup()
-        {
-            var config = SettingsConfigurationHelper.BuildConfiguration();
-
-            AppSettings = config.GetSection("AppSettings").Get<AppSettings>()
-                ?? throw new ArgumentNullException(nameof(AppSettings), $"{nameof(AppSettings)} cannot be null in {nameof(Startup)} initialization");
-            ApplicationDBContext = new ApplicationDBContext();
-
-            DateTime dateTime = DateTime.Now;
-            ApplicationInstance = new ApplicationInstance()
-            {
-                InitiationTime = dateTime,
-            };
-
-            ApplicationInstanceRepository = new ApplicationInstanceRepository(ApplicationDBContext);
-            FileDataModelRepository = new FileDataModelRepository(ApplicationDBContext);
-            ExtensionRepository = new ExtensionRepository(ApplicationDBContext);
-            CategoryRepository = new CategoryRepository(ApplicationDBContext);
-            FailedMovesRepository = new FailedMovesRepository(ApplicationDBContext);
-
-            ApplicationInstanceRepository.AddEntity(ApplicationInstance);
-            ApplicationInstanceRepository.SaveChanges();
-
-            ApplicationInstance = ApplicationInstanceRepository.GetInstanceByTime(dateTime)!;
-            DbInitializer.SeedDatabase(applicationDBContext: ApplicationDBContext);
-
-            Categories = (List<Category>)CategoryRepository.GetAll();
-            Extensions = (List<Extension>)ExtensionRepository.GetAll();
-            ExcludedExtensions = GetExcludedExtensions();
-            ExtensionCategories = GetExtensionCategory();
-            CategoryNames = GetCategoryNames();
-        }
-
         // properties
-        public ApplicationInstance ApplicationInstance { get; set; }
-        public AppSettings AppSettings { get; set; }
-        public ApplicationDBContext ApplicationDBContext { get; set; }
-        public ApplicationInstanceRepository ApplicationInstanceRepository { get; set; }
-        public FileDataModelRepository FileDataModelRepository { get; set; }
-        public ExtensionRepository ExtensionRepository { get; set; }
-        public CategoryRepository CategoryRepository { get; set; }
-        public FailedMovesRepository FailedMovesRepository { get; set; }
-        public List<Category> Categories { get; set; } = new List<Category>();
-        public List<string> CategoryNames { get; set; } = new List<string>();
-        public List<Extension> Extensions { get; set; } = new List<Extension>();
-        public List<string> ExcludedExtensions { get; set; } = new List<string>();
-        public Dictionary<string, string> ExtensionCategories { get; set; } = new Dictionary<string, string>();
+        private readonly IConfigurationService _configurationService;
+        private readonly IDataService _dataService;
 
-        // methods
-        public List<string> GetExcludedExtensions()
+        public IApplicationInstanceRepository ApplicationInstanceRepository { get; }
+        public IFileDataModelRepository FileDataModelRepository { get; }
+        public IExtensionRepository ExtensionRepository { get; }
+        public ICategoryRepository CategoryRepository { get; }
+        public IFailedMovesRepository FailedMovesRepository { get; }
+
+        public ApplicationInstance ApplicationInstance { get; private set; }
+        public AppSettings AppSettings => _configurationService.AppSettings;
+        public List<Category> Categories => _dataService.Categories;
+        public List<Extension> Extensions => _dataService.Extensions;
+
+        public Startup(IConfigurationService configurationService, IDataService dataService, IApplicationInstanceRepository applicationInstanceRepository, IFileDataModelRepository fileDataModelRepository, IExtensionRepository extensionRepository, ICategoryRepository categoryRepository, IFailedMovesRepository failedMovesRepository)
         {
-            var excludedExtensions = from Extension extension in Extensions
-                                     join Category category in Categories
-                                     on extension.CategoryId equals category.Id
-                                     where category.CategoryName == "excludedextensions"
-                                     select extension.ExtensionName;
-
-            List<string> result = new List<string>();
-            foreach (var extension in excludedExtensions)
-            {
-                result.Add(extension);
-
-                //AnsiConsole.MarkupLine($"[magenta]Excluded Extension: [/][cyan]{extension}[/]");
-            }
-
-            return result;
+            _configurationService = configurationService;
+            _dataService = dataService;
+            ApplicationInstanceRepository = applicationInstanceRepository;
+            FileDataModelRepository = fileDataModelRepository;
+            ExtensionRepository = extensionRepository;
+            CategoryRepository = categoryRepository;
+            FailedMovesRepository = failedMovesRepository;
         }
 
-        public Dictionary<string, string> GetExtensionCategory()
+        public void Initialize()
         {
-            var extensionCategory = from Extension extension in Extensions
-                                    join Category category in Categories
-                                    on extension.CategoryId equals category.Id
-                                    select new
-                                    {
-                                        newExtension = extension.ExtensionName,
-                                        newCategory = category.CategoryName
-                                    };
-
-            Dictionary<string, string> result = new Dictionary<string, string>();
-
-            foreach (var extension in extensionCategory)
-            { result.Add(extension.newExtension, extension.newCategory); }
-
-            //foreach (var extension in result.Keys)
-            //{
-            //    AnsiConsole.MarkupLine($"[magenta]Extension: [/][cyan]{extension,-15}[/][magenta] - Category: [/][cyan]{result[extension]}[/]");
-            //}
-
-            return result;
-        }
-
-        public List<string> GetCategoryNames()
-        {
-            List<string> result = new List<string>();
-
-            foreach (var category in Categories)
-            {
-                result.Add(category.CategoryName);
-            }
-
-            return result;
-        }
-
-        public void GetAppSettings()
-        {
-            var config = SettingsConfigurationHelper.BuildConfiguration();
-
-            AppSettings = config.GetSection("AppSettings").Get<AppSettings>()
-                ?? throw new ArgumentNullException(nameof(AppSettings), $"{nameof(AppSettings)} cannot be null in {nameof(Startup)} initialization");
+            ApplicationInstance = _dataService.CreateApplicationInstance(DateTime.Now);
+            _dataService.EnsureDatabaseSeeded();
+            _dataService.LoadInitialData();
         }
     }
 }

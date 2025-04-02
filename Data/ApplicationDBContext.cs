@@ -104,8 +104,6 @@ namespace FileSort.Data
 
                 f.Property(failed => failed.FailedDate)
                     .HasDefaultValueSql("GETDATE()");
-
-
             });
         }
     }

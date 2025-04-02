@@ -1,5 +1,5 @@
-﻿using FileSort.DataModels;
-using FileSort.Repositories;
+﻿using FileSort.Data.Interfaces;
+using FileSort.DataModels;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
@@ -11,12 +11,13 @@ namespace FileSort.FileHandling
 {
     internal class BaseFileHandling
     {
-        public BaseFileHandling(FailedMovesRepository failedMovesRepository)
+        private IFailedMovesRepository FailedMovesRepository { get; }
+
+        public BaseFileHandling(IFailedMovesRepository failedMovesRepository)
         {
             FailedMovesRepository = failedMovesRepository;
         }
 
-        private FailedMovesRepository FailedMovesRepository { get; set; }
 
         // method dedicated to moving a file
         protected void MoveFile(string file, string destination)

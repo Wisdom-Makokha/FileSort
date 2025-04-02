@@ -1,31 +1,31 @@
 ﻿using FileSort.DataModels;
 using FileSort.Startup;
-using FileSort.Repositories;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FileSort.Data.Interfaces;
 
 namespace FileSort.FileHandling
 {
     internal class Reverse : BaseFileHandling
     {
-        public Reverse(FailedMovesRepository failedMovesRepository, ApplicationInstance applicationInstance, FileDataModelRepository fileDataModelRepository)
+        public Reverse(IFailedMovesRepository failedMovesRepository, Guid applicationInstanceId, IFileDataModelRepository fileDataModelRepository)
             : base(failedMovesRepository)
         {
-            ApplicationInstance = applicationInstance;
+            ApplicationInstanceId = applicationInstanceId;
             FileRepository = fileDataModelRepository;
         }
 
-        private ApplicationInstance ApplicationInstance { get; }
-        private FileDataModelRepository FileRepository { get; }
+        private Guid ApplicationInstanceId { get; }
+        private IFileDataModelRepository FileRepository { get; }
 
         // reverse the move for the files
         public void ReverseSort()
         {
-            var movedFiles = FileRepository.GetInstanceMovedFiles(ApplicationInstance.ApplicationId);
+            var movedFiles = FileRepository.GetInstanceMovedFiles(ApplicationInstanceId);
 
             if (movedFiles.Count > 0)
             {

@@ -1,4 +1,5 @@
-﻿using FileSort.DataModels;
+﻿using FileSort.Data.Interfaces;
+using FileSort.DataModels;
 using FileSort.Display;
 using Spectre.Console;
 using System;
@@ -11,15 +12,11 @@ namespace FileSort.Data
 {
     internal static class DbInitializer
     {
-        public static void SeedDatabase(ApplicationDBContext applicationDBContext)
+        public static void SeedDatabase(ICategoryRepository categoryRepository, IExtensionRepository extensionRepository)
         {
-            applicationDBContext.Database.EnsureCreated();
-
-
-            using var transaction = applicationDBContext.Database.BeginTransaction();
             try
             {
-                if (SeedCategories(applicationDBContext))
+                if (SeedCategories(categoryRepository, extensionRepository))
                 {
                     AnsiConsole.MarkupLine("[green]Database successfully seeded[/]");
                     //SpecialPrinting.PrintColored("Database successfully seeded", ConsoleColor.Green);
@@ -28,21 +25,17 @@ namespace FileSort.Data
                 //{
                 //    SpecialPrinting.PrintColored("Database already seeded", ConsoleColor.DarkYellow);
                 //}
-
-                transaction.Commit();
             }
             catch
             {
-                transaction.Rollback();
                 throw;
             }
         }
 
-        public static bool SeedCategories(ApplicationDBContext applicationDBContext)
+        public static bool SeedCategories(ICategoryRepository categoryRepository, IExtensionRepository extensionRepository)
         {
-            if (!applicationDBContext.Categories.Any())
+            if (!categoryRepository.GetAll().Any())
             {
-
                 var categories = new List<Category>
                 {
                     new Category
@@ -97,8 +90,11 @@ namespace FileSort.Data
                     },
                 };
 
-                applicationDBContext.Categories.AddRange(categories);
-                applicationDBContext.SaveChanges();
+                foreach (var category in categories)
+                {
+                    categoryRepository.AddEntity(category);
+                }
+                categoryRepository.SaveChanges();
 
                 AnsiConsole.MarkupLine("[green]Categories table seeded successfully[/]");
                 //SpecialPrinting.PrintColored("Categories table seeded successfully", ConsoleColor.Green);
@@ -109,18 +105,17 @@ namespace FileSort.Data
             //    SpecialPrinting.PrintColored("Categories table already seeded", ConsoleColor.DarkYellow);
             //}
 
-            bool result = SeedExtensions(applicationDBContext);
+            bool result = SeedExtensions(categoryRepository, extensionRepository);
 
             return result;
         }
 
-        public static bool SeedExtensions(ApplicationDBContext applicationDBContext)
+        public static bool SeedExtensions(ICategoryRepository categoryRepository, IExtensionRepository extensionRepository)
         {
             bool result = false;
-            if (!applicationDBContext.Extensions.Any())
+            if (!extensionRepository.GetAll().Any())
             {
-                var categories = applicationDBContext.Categories.ToList();
-
+                var categories = categoryRepository.GetAll();
 
                 var extensions = new List<Extension>
                 {
@@ -281,8 +276,11 @@ namespace FileSort.Data
                     }
                 };
 
-                applicationDBContext.Extensions.AddRange(extensions);
-                applicationDBContext.SaveChanges();
+                foreach(var extension in extensions)
+                {
+                    extensionRepository.AddEntity(extension);
+                }
+                extensionRepository.SaveChanges();
 
                 AnsiConsole.MarkupLine("[green]Extensions table seeded successfully[/]");
                 //SpecialPrinting.PrintColored("Extensions table seeded successfully", ConsoleColor.Green);

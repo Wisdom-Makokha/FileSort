@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FileSort.Interfaces
+namespace FileSort.Data.Interfaces
 {
     internal interface IFileDataModelRepository : IBaseRepository<FileDataModel>
     {
