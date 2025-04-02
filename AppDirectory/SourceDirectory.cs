@@ -21,13 +21,6 @@ namespace FileSort.AppDirectory
             //AnsiConsole.MarkupLine($"[yellow]Source directory - [/][cyan]{sourceFolder}[/]");
 
             ExcludedExtensions = excludedExtensions;
-
-            foreach (var extension in excludedExtensions)
-            {
-                AnsiConsole.MarkupLine(extension.ExtensionName);
-            }
-            Console.ReadLine();
-
             SourceFiles = GetSourceFiles();
         }
 
@@ -42,10 +35,9 @@ namespace FileSort.AppDirectory
             foreach (string file in files)
             {
                 var extension = Path.GetExtension(file);
-
                 var extensionObj = ExcludedExtensions.FirstOrDefault(e => e.ExtensionName == extension);
 
-                if (extensionObj != null)
+                if (extensionObj == null)
                     sourceFiles.Add(file);
             }
 

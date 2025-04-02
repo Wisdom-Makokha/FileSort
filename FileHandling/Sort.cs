@@ -46,12 +46,11 @@ namespace FileSort.FileHandling
         public void SortFiles()
         {
             //AnsiConsole.MarkupLine("[yellow]Sorting files... [/]");
-
             string subDirectory;
 
             if (SourceDirectory.SourceFiles.Count > 0)
             {
-                int fileCount = 0;
+                int fileCount = 1;
                 foreach (var file in SourceDirectory.SourceFiles)
                 {
                     FileInfo fileInfo = new FileInfo(file);
@@ -62,28 +61,30 @@ namespace FileSort.FileHandling
                     var category = extensionObj == null ? null : extensionObj.Category;
                     subDirectory = category == null ? "other" : category.CategoryName;
 
-                    subDirectory = "other";
-                    Extension newExtension = new Extension()
+                    if (subDirectory == "other")
                     {
-                        ExtensionName = extension,
-                        CategoryId = Categories.Single(c => c.CategoryName == subDirectory).Id
-                    };
+                        Extension newExtension = new Extension()
+                        {
+                            ExtensionName = extension,
+                            CategoryId = Categories.Single(c => c.CategoryName == subDirectory).Id
+                        };
 
-                    try
-                    {
-                        _extensionRepository.AddEntity(newExtension);
-                        _extensionRepository.SaveChanges();
-                    }
-                    catch (Exception ex)
-                    {
-                        AnsiConsole.MarkupLine($"Error: {ex.Message}");
+                        try
+                        {
+                            _extensionRepository.AddEntity(newExtension);
+                            _extensionRepository.SaveChanges();
+                        }
+                        catch (Exception ex)
+                        {
+                            AnsiConsole.MarkupLine($"Error: {ex.Message}");
+                        }
                     }
 
                     FileDataModel fileDataModel = new FileDataModel()
                     {
                         FileName = Path.GetFileNameWithoutExtension(fileInfo.FullName),
-                        ExtensionId = Extensions.Single(e => e.ExtensionName == extension).Id,
-                        CategoryId = Categories.Single(c => c.CategoryName == subDirectory).Id,
+                        ExtensionId = Extensions.First(e => e.ExtensionName == extension).Id,
+                        CategoryId = Categories.First(c => c.CategoryName == subDirectory).Id,
                         SourceFolderPath = SourceDirectory.DirectoryPath,
                         DestinationFolderPath = DestinationDirectoryPath,
                         ApplicationInstanceId = ApplicationInstanceId,
@@ -98,9 +99,9 @@ namespace FileSort.FileHandling
                         _fileDataModelRepository.AddEntity(fileDataModel);
                         _fileDataModelRepository.SaveChanges();
 
-                        AnsiConsole.MarkupLine($"[green]{fileCount,4}.Filename[/][cyan]{fileDataModel.FileName}[/]");
-                        AnsiConsole.MarkupLine($"[green]{" ",4}.Source - [/][cyan]{fileDataModel.SourceFolderPath}[/]");
-                        AnsiConsole.MarkupLine($"[green]{" ",4}.Destination - [/][cyan]{fileDataModel.DestinationFolderPath}[/]");
+                        AnsiConsole.MarkupLine($"[green]{fileCount,3}.{"Filename", -12}- [/][cyan]{fileDataModel.FileName}[/]");
+                        AnsiConsole.MarkupLine($"[green]{" ",3}.{"Source", -12}- [/][cyan]{fileDataModel.SourceFolderPath}[/]");
+                        AnsiConsole.MarkupLine($"[green]{" ",3}.{"Destination", -12}- [/][cyan]{fileDataModel.DestinationFolderPath}[/]");
                         Console.WriteLine();
                     }
                     catch (Exception ex)
