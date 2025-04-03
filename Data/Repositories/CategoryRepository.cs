@@ -15,9 +15,9 @@ namespace FileSort.Data.Repositories
         {
         }
 
-        public int GetCategoryId(string categoryName)
+        public Category? GetCategoryByName(string categoryName)
         {
-            return _dbContext.Categories.Single(c =>  c.CategoryName == categoryName).Id;
+            return _dbContext.Categories.FirstOrDefault(c => c.CategoryName == categoryName);
         }
     }
 }

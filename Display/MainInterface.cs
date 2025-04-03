@@ -79,8 +79,8 @@ namespace FileSort.Display
             {
                 options[userChoice]();
 
-                AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue[/]");
-                Console.ReadLine();
+                //AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue[/]");
+                //Console.ReadLine();
 
                 return true;
             }

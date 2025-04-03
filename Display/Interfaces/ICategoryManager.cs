@@ -11,6 +11,8 @@ namespace FileSort.Display.Interfaces
     {
         void CheckCategories();
         void ShowCategories();
+        void ViewCategoryDetails(Category category);
+        void CategoryOptions(Category category);
         void AddCategory();
         void ShowCategory(Category category);
         bool RemoveCategory(Category category);

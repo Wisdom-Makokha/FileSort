@@ -65,9 +65,6 @@ namespace FileSort.Display.Managers
                 if (userChoice != MainInterface.BackMessage)
                 {
                     EditFolder(folderType, interfaceName, folderName);
-
-                    AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue[/]");
-                    Console.ReadLine();
                 }
                 else
                 {

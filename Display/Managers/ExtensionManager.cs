@@ -62,9 +62,6 @@ namespace FileSort.Display.Managers
                     var extension = _extensions.FirstOrDefault(c => c.ExtensionName == pickedExtension);
 
                     ShowExtension(extension!);
-
-                    AnsiConsole.MarkupLine("[yellow]Press <Enter> to continue.... [/]");
-                    Console.ReadLine();
                 }
                 else
                     tryAgain = false;
@@ -121,6 +118,38 @@ namespace FileSort.Display.Managers
 
         public void ShowExtension(Extension extension)
         {
+            ViewExtensionDetails(extension);
+
+            var options = new List<string>
+            { "more options", MainInterface.BackMessage};
+
+            var moreOptions = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[magenta]More category options[/]")
+                    .AddChoices(options));
+
+            switch (moreOptions)
+            {
+                case "more options":
+                    ExtensionOptions(extension);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void ViewExtensionDetails(Extension extension)
+        {
+            AnsiConsole.MarkupLine("[underline silver]EXTENSION[/]");
+
+            AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{extension.ExtensionName}[/]");
+            AnsiConsole.MarkupLine($"[magenta]Category: - [/][cyan]{extension.Category.CategoryName}[/]");
+            Console.WriteLine();
+            Console.WriteLine();
+        }
+
+        public void ExtensionOptions(Extension extension)
+        {
             bool tryAgain = true;
             var moreOnExtension = new Dictionary<string, Func<Extension, bool>>
             {
@@ -134,14 +163,7 @@ namespace FileSort.Display.Managers
             while (tryAgain)
             {
                 AnsiConsole.Clear();
-
-                AnsiConsole.MarkupLine("[underline magenta]Extension[/]");
-                AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{extension.ExtensionName}[/]");
-                AnsiConsole.MarkupLine($"[magenta]Category: - [/][cyan]{extension.Category.CategoryName}[/]");
-
-                Console.WriteLine();
-                Console.WriteLine();
-
+                AnsiConsole.MarkupLine("[underline silver]EXTENSION[/]");
 
                 var userChoice = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
@@ -158,7 +180,7 @@ namespace FileSort.Display.Managers
 
         public bool EditExtensionName(Extension extension)
         {
-            var updateExtensionName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new extension name[/]"));
+            var updateExtensionName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new extension name: [/]"));
 
             bool confirmName = AnsiConsole.Prompt(
                new TextPrompt<bool>($"[magenta]Update extension name from: [/][cyan]{extension.ExtensionName}[/][magenta] to [/][cyan]{updateExtensionName}[/]?")
@@ -218,7 +240,7 @@ namespace FileSort.Display.Managers
                 {
                     extension.CategoryId = category!.Id;
                     extension.Category = category!;
-                    
+
                     _extensionRepository.UpdateEntity(extension);
                     _extensionRepository.SaveChanges();
                     _extensions.FirstOrDefault(e => e.Id == extension.Id)!.CategoryId = category.Id;

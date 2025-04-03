@@ -41,8 +41,9 @@ namespace FileSort.Display.Managers
 
             while (keepGoing)
             {
-                AnsiConsole.Clear();
+                //AnsiConsole.Clear();
                 keepGoing = MainInterface.RunOptions(miniFunctions, "SORT HISTORY");
+
             }
         }
 
@@ -77,7 +78,10 @@ namespace FileSort.Display.Managers
                     Console.ReadLine();
                 }
                 else
+                {
                     tryAgain = false;
+                    
+                }
             }
         }
 
@@ -133,6 +137,9 @@ namespace FileSort.Display.Managers
                 AnsiConsole.Write(categoriesTable);
             else
                 AnsiConsole.MarkupLine("[olive]No records to show[/]");
+
+            Console.ReadLine();
+            AnsiConsole.Clear();
         }
     }
 }

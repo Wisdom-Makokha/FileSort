@@ -9,6 +9,6 @@ namespace FileSort.Data.Interfaces
 {
     internal interface ICategoryRepository : IBaseRepository<Category>
     {
-        int GetCategoryId(string categoryName);
+        Category? GetCategoryByName(string categoryName);
     }
 }

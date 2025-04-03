@@ -19,7 +19,7 @@ namespace FileSort.Display.Managers
         public CategoryManager(ICategoryRepository repository)
         {
             _repository = repository;
-            _categories = (List<Category>) _repository.GetAll();
+            _categories = (List<Category>)_repository.GetAll();
             _categoryNames = _categories.Select(c => c.CategoryName).ToList();
         }
 
@@ -36,7 +36,7 @@ namespace FileSort.Display.Managers
 
             while (keepGoing)
             {
-                keepGoing = MainInterface.RunOptions(miniFunctions, "EXTENSIONS");
+                keepGoing = MainInterface.RunOptions(miniFunctions, "CATEGORIES");
             }
         }
 
@@ -59,7 +59,7 @@ namespace FileSort.Display.Managers
 
                 if (pickedCategory != MainInterface.BackMessage)
                 {
-                    var category = _categories.FirstOrDefault(c => c.CategoryName == pickedCategory);
+                    var category = _repository.GetCategoryByName(pickedCategory);
 
                     ShowCategory(category!);
                 }
@@ -68,7 +68,44 @@ namespace FileSort.Display.Managers
             }
         }
 
+        public void ViewCategoryDetails(Category category)
+        {
+            AnsiConsole.MarkupLine("[underline silver]CATEGORY[/]");
+
+            AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{category.CategoryName}[/]");
+            AnsiConsole.MarkupLine($"[magenta]Description: - [/][cyan]{category.CategoryDescription}[/]");
+            AnsiConsole.MarkupLine($"[magenta]Extensions: [/]");
+            foreach (var item in category.Extensions)
+            {
+                AnsiConsole.MarkupLine($"\t[magenta]- [/][cyan]{item.ExtensionName}[/]");
+            }
+            Console.WriteLine();
+            Console.WriteLine();
+        }
+
         public void ShowCategory(Category category)
+        {
+            ViewCategoryDetails(category);
+
+            var options = new List<string>()
+            { "more options", MainInterface.BackMessage };
+
+            var moreOptions = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                .Title("[magenta]More category options: -[/]")
+                .AddChoices(options));
+
+            switch (moreOptions)
+            {
+                case "more options":
+                    CategoryOptions(category);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void CategoryOptions(Category category)
         {
             bool tryAgain = true;
 
@@ -85,17 +122,7 @@ namespace FileSort.Display.Managers
             while (tryAgain)
             {
                 AnsiConsole.Clear();
-
-                AnsiConsole.MarkupLine("[underline magenta]Category[/]");
-                AnsiConsole.MarkupLine($"[magenta]Name: - [/][cyan]{category.CategoryName}[/]");
-                AnsiConsole.MarkupLine($"[magenta]Description: - [/][cyan]{category.CategoryDescription}[/]");
-                AnsiConsole.MarkupLine($"[magenta]Extensions: [/]");
-                foreach (var item in category.Extensions)
-                {
-                    AnsiConsole.MarkupLine($"\t[magenta]- [/][cyan]{item.ExtensionName}[/]");
-                }
-                Console.WriteLine();
-                Console.WriteLine();
+                AnsiConsole.MarkupLine("[underline silver]CATEGORY[/]");
 
                 var userChoice = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
@@ -184,7 +211,7 @@ namespace FileSort.Display.Managers
 
         public bool EditCategoryName(Category category)
         {
-            var updateCategoryName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new category name[/]"));
+            var updateCategoryName = AnsiConsole.Prompt(new TextPrompt<string>("[magenta]Enter a new category name: [/]"));
 
             bool confirmName = AnsiConsole.Prompt(
                new TextPrompt<bool>($"[magenta]Are your sure you want to update category name from: [/][cyan]{category.CategoryName}[/][magenta] to [/][cyan]{updateCategoryName}[/]?")
@@ -202,7 +229,7 @@ namespace FileSort.Display.Managers
                     _repository.UpdateEntity(category);
                     _repository.SaveChanges();
                     _categories.FirstOrDefault(category => category.Id == category.Id)!.CategoryName = category.CategoryName;
-                    
+
                     AnsiConsole.MarkupLine($"[green]Category name successfully updated to [/][cyan]{category.CategoryName}[/]");
                 }
                 catch (Exception ex)
@@ -219,7 +246,7 @@ namespace FileSort.Display.Managers
         }
         public bool EditCategoryDescription(Category category)
         {
-            var updateCategoryDescription = AnsiConsole.Prompt(new TextPrompt<string?>("[magenta]Enter a new category description[/]"));
+            var updateCategoryDescription = AnsiConsole.Prompt(new TextPrompt<string?>("[magenta]Enter a new category description: [/]"));
             bool confirmDescription = AnsiConsole.Prompt(
                new TextPrompt<bool>($"[magenta]Are your sure you want to update category description from: [/][cyan]{category.CategoryDescription}[/][magenta] to [/][cyan]{updateCategoryDescription}[/]?")
                    .AddChoice(true)

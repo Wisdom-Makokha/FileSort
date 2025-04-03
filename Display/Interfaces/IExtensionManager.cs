@@ -11,6 +11,8 @@ namespace FileSort.Display.Interfaces
     {
         void CheckExtensions();
         void ShowExtensions();
+        void ViewExtensionDetails(Extension extension);
+        void ExtensionOptions(Extension extension);
         void AddExtension();
         void ShowExtension(Extension extension);
         bool EditExtensionName(Extension extension);
